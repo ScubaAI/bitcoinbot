@@ -1,0 +1,82 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bitcoin-orange: #f7931a;
+  --bitcoin-black: #0d0d0d;
+  --bitcoin-dark: #1a1a1a;
+  --bitcoin-gray: #2a2a2a;
+}
+
+body {
+  background: var(--bitcoin-black);
+  color: white;
+}
+
+@layer utilities {
+  .bg-bitcoin-black {
+    background-color: var(--bitcoin-black);
+  }
+  
+  .bg-bitcoin-dark {
+    background-color: var(--bitcoin-dark);
+  }
+  
+  .bg-bitcoin-gray {
+    background-color: var(--bitcoin-gray);
+  }
+  
+  .text-bitcoin-orange {
+    color: var(--bitcoin-orange);
+  }
+  
+  .bg-bitcoin-orange {
+    background-color: var(--bitcoin-orange);
+  }
+  
+  .border-bitcoin-orange {
+    border-color: var(--bitcoin-orange);
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bitcoin-dark);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--bitcoin-orange);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #e8850c;
+}
+
+/* Terminal cursor animation */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.cursor-blink {
+  animation: blink 1s step-end infinite;
+}
+
+/* Gradient animation */
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.gradient-animate {
+  background-size: 200% 200%;
+  animation: gradient-shift 15s ease infinite;
+}

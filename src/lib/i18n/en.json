@@ -1,0 +1,37 @@
+{
+  "hero": {
+    "title": "Bitcoin Infrastructure Agent",
+    "subtitle": "Your AI-powered guide to understanding Bitcoin's technical architecture, from the protocol to Lightning Network payments.",
+    "cta": "Start Exploring",
+    "terminal": {
+      "title": "Interactive Terminal",
+      "hint": "Type your question about Bitcoin..."
+    }
+  },
+  "chat": {
+    "placeholder": "Ask me about Bitcoin protocol, Lightning, or mining...",
+    "thinking": "Analyzing blockchain data...",
+    "welcome": "Welcome to Bitcoin Agent. I can help you understand:\n\n• Bitcoin protocol & consensus mechanisms\n• Lightning Network & payment channels\n• Mining & proof of work\n• Wallet security & best practices\n• On-chain vs off-chain transactions\n\nWhat would you like to learn?"
+  },
+  "tip": {
+    "title": "Support the Project",
+    "description": "If you find this tool useful, consider supporting the development with a Lightning donation.",
+    "button": "Send Tip",
+    "success": "Thank you for your support! ⚡",
+    "error": "Payment failed. Please try again."
+  },
+  "footer": {
+    "resources": "Educational Resources",
+    "documentation": "Documentation",
+    "protocol": "Bitcoin Protocol",
+    "lightning": "Lightning Network",
+    "books": "Recommended Reading",
+    "disclaimer": "This is an educational tool. Not financial advice.",
+    "copyright": "© 2024 Bitcoin Agent. Built with Next.js & Groq."
+  },
+  "errors": {
+    "generic": "An error occurred. Please try again.",
+    "network": "Network error. Check your connection.",
+    "rateLimit": "Too many requests. Please wait a moment."
+  }
+}

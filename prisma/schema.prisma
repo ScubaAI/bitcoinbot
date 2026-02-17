@@ -1,0 +1,79 @@
+// This is your Prisma schema file
+// Learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Chat Session Model
+model ChatSession {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  messages  Message[]
+  
+  // User session info (optional)
+  ipAddress String?
+  userAgent String?
+}
+
+// Message Model
+model Message {
+  id        String      @id @default(cuid())
+  createdAt DateTime    @default(now())
+  content   String      @db.Text
+  role      MessageRole
+  session   ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  sessionId String
+  
+  // Token usage tracking
+  tokens    Int         @default(0)
+}
+
+enum MessageRole {
+  user
+  assistant
+  system
+}
+
+// Tip/Donation Model
+model Tip {
+  id              String   @id @default(cuid())
+  createdAt       DateTime @default(now())
+  amount          Int      // in satoshis
+  recipient       String
+  paymentRequest  String?  @db.Text
+  status          TipStatus @default(PENDING)
+  
+  // User info
+  ipAddress       String?
+  message         String?  @db.Text
+}
+
+enum TipStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  EXPIRED
+}
+
+// User Feedback Model
+model Feedback {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  message   String   @db.Text
+  type      FeedbackType
+  helpful   Boolean?
+  sessionId String?
+}
+
+enum FeedbackType {
+  POSITIVE
+  NEGATIVE
+  SUGGESTION
+}
