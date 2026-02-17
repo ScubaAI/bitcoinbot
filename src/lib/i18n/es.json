@@ -1,37 +1,91 @@
 {
   "hero": {
-    "title": "Agente de Infraestructura Bitcoin",
-    "subtitle": "Tu guía con IA para entender la arquitectura técnica de Bitcoin, desde el protocolo hasta los pagos en Lightning Network.",
-    "cta": "Comenzar a Explorar",
+    "title": "Bitcoin",
+    "subtitle": "Capa de Liquidación Global",
+    "cta": "Explorar la Red",
+    "secondaryCta": "Ver Datos de Mercado",
+    "stats": {
+      "nodes": "Nodos Verificados",
+      "uptime": "Tiempo Activo",
+      "countries": "Países"
+    },
+    "infrastructure": {
+      "title": "Red Monetaria Abierta",
+      "layer1": {
+        "name": "Capa Base",
+        "desc": "Liquidación y finalidad. Libro inmutable asegurado por proof-of-work."
+      },
+      "layer2": {
+        "name": "Lightning Network",
+        "desc": "Pagos instantáneos a escala. Millones de tx/seg fuera de la cadena."
+      },
+      "layer3": {
+        "name": "Capa de Aplicación",
+        "desc": "Wallets, servicios y protocolos construidos encima."
+      }
+    },
     "terminal": {
       "title": "Terminal Interactiva",
       "hint": "Escribe tu pregunta sobre Bitcoin..."
     }
   },
+  "markets": {
+    "title": "Métricas de Red",
+    "subtitle": "Los datos de mercado son secundarios a la utilidad de la red",
+    "price": "BTC/USD",
+    "marketCap": "Capitalización",
+    "hashRate": "Hash Rate",
+    "change24h": "Cambio 24h"
+  },
   "chat": {
     "placeholder": "Pregúntame sobre el protocolo Bitcoin, Lightning, o minería...",
     "thinking": "Analizando datos de la blockchain...",
-    "welcome": "Bienvenido a Bitcoin Agent. Puedo ayudarte a entender:\n\n• Protocolo Bitcoin y mecanismos de consenso\n• Lightning Network y canales de pago\n• Minería y prueba de trabajo\n• Seguridad de billeteras y mejores prácticas\n• Transacciones on-chain vs off-chain\n\n¿Qué te gustaría aprender?"
+    "welcome": "Bienvenido a Bitcoin Agent. Puedo ayudarte a entender:\n\n• Protocolo Bitcoin y mecanismos de consenso\n• Lightning Network y canales de pago\n• Minería y prueba de trabajo\n• Seguridad de billeteras y mejores prácticas\n• Transacciones on-chain vs off-chain\n\n¿Qué te gustaría aprender?",
+    "error": "Error al obtener respuesta. Intenta de nuevo.",
+    "send": "Enviar"
   },
   "tip": {
-    "title": "Apoya el Proyecto",
-    "description": "Si esta herramienta te resulta útil, considera apoyar el desarrollo con una donación Lightning.",
-    "button": "Enviar Propina",
-    "success": "¡Gracias por tu apoyo! ⚡",
-    "error": "El pago falló. Por favor intenta de nuevo."
+    "title": "Impulsa la Misión",
+    "description": "Tus sats nos ayudan a integrar este Bitcoin Agent en comunidades del mundo—empezando por Bitcoin Beach y más allá.",
+    "button": "Enviar Sats",
+    "success": "¡Zap recibido! ⚡",
+    "error": "El pago falló. Por favor intenta de nuevo.",
+    "impact": "Impacto hasta ahora",
+    "embeds": "Comunidades con embed",
+    "satsRaised": "Sats recaudados",
+    "nextTarget": "Próximo: Sitio de Bitcoin Beach",
+    "thankYou": "¡Gracias por mantener viva la llama naranja!",
+    "copy": "Copiar dirección LN",
+    "scan": "Escanear con wallet",
+    "customAmount": "Cantidad personalizada...",
+    "powered": "Powered by Lightning Network",
+    "preset": {
+      "1k": "1.000 sats",
+      "5k": "5.000 sats",
+      "21k": "21.000 sats",
+      "100k": "100.000 sats"
+    }
   },
   "footer": {
-    "resources": "Recursos Educativos",
-    "documentation": "Documentación",
-    "protocol": "Protocolo Bitcoin",
-    "lightning": "Lightning Network",
-    "books": "Lecturas Recomendadas",
-    "disclaimer": "Esta es una herramienta educativa. No es asesoramiento financiero.",
-    "copyright": "© 2024 Bitcoin Agent. Construido con Next.js & Groq."
+    "resources": "Lectura Esencial",
+    "documentation": "Docs para Desarrolladores",
+    "protocol": "Whitepaper de Bitcoin",
+    "lightning": "Paper de Lightning",
+    "books": "Guía de Seguridad",
+    "disclaimer": "Este es software educativo. No es asesoramiento financiero.",
+    "copyright": "© 2024 Bitcoin Agent. Código abierto bajo licencia MIT.",
+    "builtBy": "Construido por",
+    "contact": "Contacto",
+    "mission": "Misión",
+    "missionText": "Democratizando la educación Bitcoin mediante IA, una comunidad a la vez.",
+    "privacy": "Privacidad",
+    "terms": "Términos"
   },
   "errors": {
     "generic": "Ocurrió un error. Por favor intenta de nuevo.",
     "network": "Error de red. Verifica tu conexión.",
-    "rateLimit": "Demasiadas solicitudes. Por favor espera un momento."
+    "rateLimit": "Demasiadas solicitudes. Por favor espera un momento.",
+    "notFound": "Página no encontrada",
+    "serverError": "Error del servidor. Por favor intenta más tarde."
   }
 }

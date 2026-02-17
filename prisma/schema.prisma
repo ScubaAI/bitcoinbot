@@ -1,6 +1,3 @@
-// This is your Prisma schema file
-// Learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,70 +7,88 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Chat Session Model
-model ChatSession {
-  id        String   @id @default(cuid())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+// ── Visitor / Anonymous Session ──────────────────────────────────────
+model VisitorSession {
+  id        String    @id @default(cuid())
+  visitorId String?   @unique // hash o uuid generado en frontend/middleware
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  expiresAt DateTime?
+
   messages  Message[]
-  
-  // User session info (optional)
-  ipAddress String?
-  userAgent String?
+  tips      Tip[]
+  feedbacks Feedback[]
+
+  @@index([createdAt])
+  @@index([visitorId])
 }
 
-// Message Model
+// ── Chat Message ─────────────────────────────────────────────────────
 model Message {
-  id        String      @id @default(cuid())
-  createdAt DateTime    @default(now())
-  content   String      @db.Text
-  role      MessageRole
-  session   ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  sessionId String
-  
-  // Token usage tracking
-  tokens    Int         @default(0)
+  id           String   @id @default(cuid())
+  createdAt    DateTime @default(now())
+  content      String   @db.VarChar(4000)
+  role         MessageRole
+  tokensUsed   Int?     // solo para assistant
+  metadata     Json?    // tool calls, citations, etc.
+
+  session      VisitorSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  sessionId    String
+
+  @@index([sessionId])
+  @@index([createdAt(sort: Desc)])
 }
 
+// ── Lightning Tip / Donation ─────────────────────────────────────────
+model Tip {
+  id             String     @id @default(cuid())
+  createdAt      DateTime   @default(now())
+  amountSats     Int                    // satoshis
+  fiatEquivalent Decimal?   @db.Decimal(10, 2) // ~USD, opcional
+  memo           String?    @db.VarChar(280)
+  paymentRequest String?    @db.Text
+  preimage       String?                // para verificar settlement
+  settledAt      DateTime?
+  status         TipStatus  @default(PENDING)
+
+  session        VisitorSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  sessionId      String?
+
+  @@index([createdAt])
+  @@index([status])
+}
+
+// ── User Feedback ────────────────────────────────────────────────────
+model Feedback {
+  id        String       @id @default(cuid())
+  createdAt DateTime     @default(now())
+  type      FeedbackType
+  rating    Int?         @default(0) // 1–5
+  message   String?      @db.Text
+  helpful   Boolean?
+
+  session   VisitorSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  sessionId String?
+}
+
+// ── Enums ────────────────────────────────────────────────────────────
 enum MessageRole {
   user
   assistant
   system
 }
 
-// Tip/Donation Model
-model Tip {
-  id              String   @id @default(cuid())
-  createdAt       DateTime @default(now())
-  amount          Int      // in satoshis
-  recipient       String
-  paymentRequest  String?  @db.Text
-  status          TipStatus @default(PENDING)
-  
-  // User info
-  ipAddress       String?
-  message         String?  @db.Text
-}
-
 enum TipStatus {
   PENDING
-  COMPLETED
+  SETTLED
   FAILED
   EXPIRED
-}
-
-// User Feedback Model
-model Feedback {
-  id        String   @id @default(cuid())
-  createdAt DateTime @default(now())
-  message   String   @db.Text
-  type      FeedbackType
-  helpful   Boolean?
-  sessionId String?
+  CANCELLED
 }
 
 enum FeedbackType {
   POSITIVE
   NEGATIVE
   SUGGESTION
+  BUG
 }

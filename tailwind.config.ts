@@ -11,7 +11,7 @@ const config: Config = {
       colors: {
         bitcoin: {
           orange: '#f7931a',
-          black: '#0d0d0d',
+          black: '#0f0f0f',
           dark: '#1a1a1a',
           gray: '#2a2a2a',
         },

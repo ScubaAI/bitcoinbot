@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { semanticSearch } from '@/lib/vector/search';
-import { SearchResponse } from '@/types';
+import { searchWhitepaper } from '@/lib/vector/search';
+import { SearchResult } from '@/types';
+
+export interface SearchResponse {
+  results: SearchResult[];
+  query: string;
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,22 +17,23 @@ export async function POST(request: NextRequest) {
 
     if (!query || typeof query !== 'string') {
       return NextResponse.json(
-        { error: 'Invalid query parameter' },
+        { error: 'Query inválida 🤔. Envía un string válido.' },
         { status: 400 }
       );
     }
 
-    const results = await semanticSearch(query, limit);
+    const results = await searchWhitepaper(query, limit);
 
     const response: SearchResponse = {
       results,
+      query,
     };
 
     return NextResponse.json(response);
   } catch (error) {
     console.error('RAG API error:', error);
     return NextResponse.json(
-      { error: 'Failed to search vector database' },
+      { error: 'La búsqueda vectorial falló. ¿El nodo está sincronizado? 😅' },
       { status: 500 }
     );
   }

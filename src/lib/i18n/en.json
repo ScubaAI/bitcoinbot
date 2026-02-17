@@ -1,37 +1,91 @@
 {
   "hero": {
-    "title": "Bitcoin Infrastructure Agent",
-    "subtitle": "Your AI-powered guide to understanding Bitcoin's technical architecture, from the protocol to Lightning Network payments.",
-    "cta": "Start Exploring",
+    "title": "Bitcoin",
+    "subtitle": "Global Settlement Layer",
+    "cta": "Explore the Network",
+    "secondaryCta": "View Market Data",
+    "stats": {
+      "nodes": "Verified Nodes",
+      "uptime": "Uptime", 
+      "countries": "Countries"
+    },
+    "infrastructure": {
+      "title": "Open Monetary Network",
+      "layer1": {
+        "name": "Base Layer",
+        "desc": "Settlement & finality. Immutable ledger secured by proof-of-work."
+      },
+      "layer2": {
+        "name": "Lightning Network",
+        "desc": "Instant payments at scale. Millions of txs/sec off-chain."
+      },
+      "layer3": {
+        "name": "Application Layer",
+        "desc": "Wallets, services, and protocols built on top."
+      }
+    },
     "terminal": {
       "title": "Interactive Terminal",
       "hint": "Type your question about Bitcoin..."
     }
   },
+  "markets": {
+    "title": "Network Metrics",
+    "subtitle": "Market data is secondary to network utility",
+    "price": "BTC/USD",
+    "marketCap": "Market Cap",
+    "hashRate": "Hash Rate",
+    "change24h": "24h Change"
+  },
   "chat": {
     "placeholder": "Ask me about Bitcoin protocol, Lightning, or mining...",
     "thinking": "Analyzing blockchain data...",
-    "welcome": "Welcome to Bitcoin Agent. I can help you understand:\n\n• Bitcoin protocol & consensus mechanisms\n• Lightning Network & payment channels\n• Mining & proof of work\n• Wallet security & best practices\n• On-chain vs off-chain transactions\n\nWhat would you like to learn?"
+    "welcome": "Welcome to Bitcoin Agent. I can help you understand:\n\n• Bitcoin protocol & consensus mechanisms\n• Lightning Network & payment channels\n• Mining & proof of work\n• Wallet security & best practices\n• On-chain vs off-chain transactions\n\nWhat would you like to learn?",
+    "error": "Failed to get response. Please try again.",
+    "send": "Send"
   },
   "tip": {
-    "title": "Support the Project",
-    "description": "If you find this tool useful, consider supporting the development with a Lightning donation.",
-    "button": "Send Tip",
-    "success": "Thank you for your support! ⚡",
-    "error": "Payment failed. Please try again."
+    "title": "Power the Mission",
+    "description": "Your sats help us embed this Bitcoin Agent in communities worldwide—starting with Bitcoin Beach and beyond.",
+    "button": "Send Sats",
+    "success": "Zap received! ⚡",
+    "error": "Payment failed. Please try again.",
+    "impact": "Impact so far",
+    "embeds": "Community embeds",
+    "satsRaised": "Sats raised",
+    "nextTarget": "Next: Bitcoin Beach website",
+    "thankYou": "Thank you for keeping the orange flame alive!",
+    "copy": "Copy LN address",
+    "scan": "Scan with wallet",
+    "customAmount": "Custom amount...",
+    "powered": "Powered by Lightning Network",
+    "preset": {
+      "1k": "1,000 sats",
+      "5k": "5,000 sats", 
+      "21k": "21,000 sats",
+      "100k": "100,000 sats"
+    }
   },
   "footer": {
-    "resources": "Educational Resources",
-    "documentation": "Documentation",
-    "protocol": "Bitcoin Protocol",
-    "lightning": "Lightning Network",
-    "books": "Recommended Reading",
-    "disclaimer": "This is an educational tool. Not financial advice.",
-    "copyright": "© 2024 Bitcoin Agent. Built with Next.js & Groq."
+    "resources": "Essential Reading",
+    "documentation": "Developer Docs",
+    "protocol": "Bitcoin Whitepaper",
+    "lightning": "Lightning Paper",
+    "books": "Security Guide",
+    "disclaimer": "This is educational software. Not financial advice.",
+    "copyright": "© 2024 Bitcoin Agent. Open source under MIT license.",
+    "builtBy": "Built by",
+    "contact": "Contact",
+    "mission": "Mission",
+    "missionText": "Democratizing Bitcoin education through AI, one community at a time.",
+    "privacy": "Privacy",
+    "terms": "Terms"
   },
   "errors": {
     "generic": "An error occurred. Please try again.",
     "network": "Network error. Check your connection.",
-    "rateLimit": "Too many requests. Please wait a moment."
+    "rateLimit": "Too many requests. Please wait a moment.",
+    "notFound": "Page not found",
+    "serverError": "Server error. Please try again later."
   }
 }
