@@ -1,7 +1,7 @@
 // src/components/chat/ChatInterface.tsx
 'use client';
 
-import { useState, useRef, useEffect, FormEvent, useCallback } from 'react';
+import { useState, useRef, useEffect, FormEvent, useCallback, useMemo } from 'react';
 import { TerminalWindow } from '../terminal/TerminalWindow';
 import { Locale, Message, TerminalLine } from '@/types';
 
@@ -18,11 +18,18 @@ export function ChatInterface({ lang, dict }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Usar ref para streaming en lugar de state para evitar re-renders intermedios
+  const streamingContentRef = useRef('');
   const [streamingContent, setStreamingContent] = useState('');
+  
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  
+  // Track si debemos scrollear (solo en nuevos mensajes, no en cada chunk)
+  const shouldScrollRef = useRef(false);
 
   // Inicializar mensaje de bienvenida
   useEffect(() => {
@@ -35,22 +42,22 @@ export function ChatInterface({ lang, dict }: ChatInterfaceProps) {
       };
       setMessages([welcomeMessage]);
     }
-  }, [dict.welcome]);
+  }, [dict.welcome, messages.length]);
 
-  // Scroll solo cuando hay nuevos mensajes completos, no en streaming
+  // Scroll solo cuando cambian los mensajes completos (no en streaming)
   useEffect(() => {
-    if (!isLoading || streamingContent === '') {
+    if (shouldScrollRef.current) {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+      shouldScrollRef.current = false;
     }
-  }, [messages, isLoading, streamingContent]);
+  }, [messages]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    e.stopPropagation(); // Prevenir scroll
+    e.stopPropagation();
     
     if (!input.trim() || isLoading) return;
 
-    // Cancelar request anterior si existe
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
@@ -62,18 +69,18 @@ export function ChatInterface({ lang, dict }: ChatInterfaceProps) {
       createdAt: new Date(),
     };
 
-    // Actualizar UI
+    // Marcar para scroll al agregar mensaje de usuario
+    shouldScrollRef.current = true;
     setMessages((prev) => [...prev, userMessage]);
     setInput('');
     setIsLoading(true);
     setStreamingContent('');
+    streamingContentRef.current = '';
 
-    // Preparar mensajes para API
     const apiMessages = [...messages, userMessage]
       .filter((m) => m.id !== 'welcome')
       .map(({ role, content }) => ({ role, content }));
 
-    // Crear nuevo abort controller
     abortControllerRef.current = new AbortController();
 
     try {
@@ -89,8 +96,6 @@ export function ChatInterface({ lang, dict }: ChatInterfaceProps) {
       });
 
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error('API Error:', response.status, errorText);
         throw new Error(`API error: ${response.status}`);
       }
 
@@ -98,10 +103,11 @@ export function ChatInterface({ lang, dict }: ChatInterfaceProps) {
         throw new Error('No response body');
       }
 
-      // Procesar stream
+      // Procesar stream con throttling para UI
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let fullContent = '';
+      let lastUpdate = Date.now();
 
       while (true) {
         const { done, value } = await reader.read();
@@ -110,10 +116,21 @@ export function ChatInterface({ lang, dict }: ChatInterfaceProps) {
         
         const chunk = decoder.decode(value, { stream: true });
         fullContent += chunk;
-        setStreamingContent(fullContent);
+        streamingContentRef.current = fullContent;
+
+        // Throttle: actualizar UI máximo cada 50ms para evitar lag
+        const now = Date.now();
+        if (now - lastUpdate > 50) {
+          setStreamingContent(fullContent);
+          lastUpdate = now;
+        }
       }
 
-      // Agregar mensaje completo
+      // Asegurar último contenido
+      setStreamingContent(fullContent);
+
+      // Agregar mensaje completo y marcar para scroll
+      shouldScrollRef.current = true;
       setMessages((prev) => [
         ...prev,
         {
@@ -132,6 +149,7 @@ export function ChatInterface({ lang, dict }: ChatInterfaceProps) {
 
       console.error('Chat error:', error);
       
+      shouldScrollRef.current = true;
       setMessages((prev) => [
         ...prev,
         {
@@ -146,36 +164,42 @@ export function ChatInterface({ lang, dict }: ChatInterfaceProps) {
     } finally {
       setIsLoading(false);
       setStreamingContent('');
+      streamingContentRef.current = '';
       abortControllerRef.current = null;
-      // Focus back to input sin scroll
       inputRef.current?.focus({ preventScroll: true });
     }
   };
 
-  // Construir líneas del terminal
-  const terminalLines: TerminalLine[] = messages.map((msg) => ({
-    id: msg.id,
-    type: msg.role === 'user' ? 'input' : 'output',
-    content: msg.content,
-    timestamp: msg.createdAt,
-  }));
+  // Construir líneas del terminal con useMemo para evitar recreación en cada render
+  const terminalLines = useMemo(() => {
+    const lines: TerminalLine[] = messages.map((msg) => ({
+      id: msg.id,
+      type: msg.role === 'user' ? 'input' : 'output',
+      content: msg.content,
+      timestamp: msg.createdAt,
+    }));
 
-  // Agregar línea de streaming si está activo
-  if (isLoading && streamingContent) {
-    terminalLines.push({
-      id: 'streaming',
-      type: 'output',
-      content: streamingContent + '▊',
-      timestamp: new Date(),
-    });
-  } else if (isLoading && !streamingContent) {
-    terminalLines.push({
-      id: 'thinking',
-      type: 'system',
-      content: dict.thinking + '...',
-      timestamp: new Date(),
-    });
-  }
+    // Agregar línea de streaming si está activo
+    if (isLoading) {
+      if (streamingContent) {
+        lines.push({
+          id: 'streaming',
+          type: 'output',
+          content: streamingContent + '▊',
+          timestamp: new Date(),
+        });
+      } else {
+        lines.push({
+          id: 'thinking',
+          type: 'system',
+          content: dict.thinking + '...',
+          timestamp: new Date(),
+        });
+      }
+    }
+
+    return lines;
+  }, [messages, isLoading, streamingContent, dict.thinking]);
 
   return (
     <section id="chat-section" className="min-h-screen bg-slate-950 py-16 px-4 scroll-mt-20">
