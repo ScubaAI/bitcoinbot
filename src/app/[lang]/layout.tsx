@@ -64,7 +64,6 @@ export default async function RootLayout({
         className={`${jetbrainsMono.variable} ${inter.variable} font-mono bg-terminal-black text-terminal-green antialiased`}
       >
         {children}
-        <Footer lang={params.lang} dict={dict.footer} />
       </body>
     </html>
   );
