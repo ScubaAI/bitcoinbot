@@ -3,7 +3,6 @@ import { JetBrains_Mono, Inter } from 'next/font/google';
 import '../globals.css';
 import { Locale } from '@/lib/i18n/config';
 import { getDictionary } from '@/lib/i18n/config';
-import { Footer } from '@/components/footer/Footer';
 
 const jetbrainsMono = JetBrains_Mono({
   subsets: ['latin'],

@@ -35,7 +35,7 @@ const defaultDict = {
     impact: "Impact so far",
     embeds: "Community embeds",
     satsRaised: "Sats raised",
-    nextTarget: "Next: Bitcoin Beach website",
+    nextTarget: "Global Adoption",
     thankYou: "Thank you for keeping the orange flame alive!",
     copy: "Copy LN address",
     scan: "Scan with wallet",
@@ -78,7 +78,7 @@ export function TipJar({ lang, dict }: TipJarProps) {
 
   const t = dict || defaultDict[lang];
 
-  const lightningAddress = 'bitcoinagent@blink.sv';
+  const lightningAddress = 'scubapav@blink.sv';
 
   useEffect(() => {
     if (showSuccess) {
@@ -137,6 +137,7 @@ export function TipJar({ lang, dict }: TipJarProps) {
     setShowSuccess(true);
     setPaymentRequest(null);
     setSelectedAmount(null);
+    setCustomAmount('');
     setTimeout(() => setShowConfetti(false), 3000);
   };
 
