@@ -10,7 +10,7 @@ datasource db {
 // ── Visitor / Anonymous Session ──────────────────────────────────────
 model VisitorSession {
   id        String    @id @default(cuid())
-  visitorId String?   @unique // hash o uuid generado en frontend/middleware
+  visitorId String?   @unique
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   expiresAt DateTime?
@@ -18,6 +18,10 @@ model VisitorSession {
   messages  Message[]
   tips      Tip[]
   feedbacks Feedback[]
+
+  // Relación con immune system
+  immuneLogs    ImmuneLog[]
+  bypassAttempts BypassAttempt[]
 
   @@index([createdAt])
   @@index([visitorId])
@@ -29,8 +33,8 @@ model Message {
   createdAt    DateTime @default(now())
   content      String   @db.VarChar(4000)
   role         MessageRole
-  tokensUsed   Int?     // solo para assistant
-  metadata     Json?    // tool calls, citations, etc.
+  tokensUsed   Int?
+  metadata     Json?
 
   session      VisitorSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   sessionId    String
@@ -43,11 +47,15 @@ model Message {
 model Tip {
   id             String     @id @default(cuid())
   createdAt      DateTime   @default(now())
-  amountSats     Int                    // satoshis
-  fiatEquivalent Decimal?   @db.Decimal(10, 2) // ~USD, opcional
+  amountSats     Int
+  fiatEquivalent Decimal?   @db.Decimal(10, 2)
   memo           String?    @db.VarChar(280)
+  
+  // Blink-specific fields
   paymentRequest String?    @db.Text
-  preimage       String?                // para verificar settlement
+  paymentHash    String?    @unique  // ← Agregado para verificación
+  preimage       String?              // Settlement proof
+  
   settledAt      DateTime?
   status         TipStatus  @default(PENDING)
 
@@ -56,6 +64,105 @@ model Tip {
 
   @@index([createdAt])
   @@index([status])
+  @@index([paymentHash])  // ← Para lookups rápidos
+}
+
+// ── Immune System Logs (NUEVO) ──────────────────────────────────────
+model ImmuneLog {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  
+  // Identificación
+  ip          String
+  sessionId   String?
+  visitorId   String?
+  
+  // Threat data
+  threatScore Float
+  category    String   // injection, sybil, finney, etc.
+  signatures  String[] // Array de firmas detectadas
+  action      String   // allow, challenge, ban, quarantine
+  
+  // Metadata
+  userAgent   String?  @db.Text
+  path        String
+  metadata    Json?    // Datos adicionales flexibles
+  
+  // Relaciones
+  session     VisitorSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  
+  @@index([createdAt])
+  @@index([ip])
+  @@index([category])
+  @@index([action])
+}
+
+// ── Bypass Attempts (NUEVO) ─────────────────────────────────────────
+model BypassAttempt {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  
+  // Identificación
+  ip          String
+  sessionId   String?
+  
+  // Bypass data
+  reason      String           // accessibility, mobile, urgency, human
+  trustScore  Int              // 0-100
+  approved    Boolean
+  
+  // Interaction data (almacenado como JSON)
+  interactionData Json?
+  
+  // Relaciones
+  session     VisitorSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  
+  @@index([createdAt])
+  @@index([ip])
+  @@index([approved])
+}
+
+// ── Banned Nodes (NUEVO - Opcional, si quieres persistencia) ─────────
+model BannedNode {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  ip          String   @unique
+  reason      String
+  expiresAt   DateTime
+  nodeType    String   @default("byzantine")
+  
+  // Historial
+  previousBans Int     @default(0)
+  threatScore  Float?
+  
+  // Metadata del ban
+  signatures  String[]
+  path        String?
+  
+  @@index([expiresAt])
+  @@index([ip])
+}
+
+// ── Access Tokens (NUEVO - Opcional) ────────────────────────────────
+model AccessToken {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  expiresAt   DateTime
+  
+  token       String   @unique
+  method      String   // pow, bypass
+  
+  // Identificación
+  ip          String
+  sessionId   String?
+  
+  // Metadata
+  metadata    Json?    // challengeId, trustScore, etc.
+  
+  @@index([token])
+  @@index([expiresAt])
 }
 
 // ── User Feedback ────────────────────────────────────────────────────
@@ -63,7 +170,7 @@ model Feedback {
   id        String       @id @default(cuid())
   createdAt DateTime     @default(now())
   type      FeedbackType
-  rating    Int?         @default(0) // 1–5
+  rating    Int?         @default(0)
   message   String?      @db.Text
   helpful   Boolean?
 

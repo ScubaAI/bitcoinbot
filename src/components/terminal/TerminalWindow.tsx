@@ -6,17 +6,19 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Copy, Check, Terminal } from 'lucide-react';
 
 interface TerminalWindowProps {
-  lines: TerminalLine[];
+  lines?: TerminalLine[];
   isLoading?: boolean;
   children?: ReactNode;
   className?: string;
+  title?: string;
 }
 
 export function TerminalWindow({ 
-  lines, 
+  lines = [], 
   isLoading, 
   children,
-  className = '' 
+  className = '',
+  title
 }: TerminalWindowProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -135,23 +137,25 @@ export function TerminalWindow({
         <div className="flex-1 flex items-center justify-center gap-2">
           <Terminal className="w-4 h-4 text-slate-600" />
           <span className="text-xs text-slate-500 font-mono tracking-wider">
-            bitcoin-agent@mainnet:~
+            {title || 'bitcoin-agent@mainnet:~'}
           </span>
         </div>
 
-        <div className="text-xs text-slate-600 font-mono">
-          {lines.length} msgs
-        </div>
+        {!title && (
+          <div className="text-xs text-slate-600 font-mono">
+            {lines.length} msgs
+          </div>
+        )}
       </div>
 
       {/* Content */}
       <div 
         ref={containerRef}
-        className="p-4 h-[50vh] min-h-[300px] max-h-[600px] overflow-y-auto font-mono text-sm scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent scroll-smooth"
+        className={`p-4 overflow-y-auto font-mono text-sm scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent scroll-smooth ${!title && lines.length > 0 ? 'h-[50vh] min-h-[300px] max-h-[600px]' : 'min-h-[200px]'}`}
         aria-live="polite"
         aria-atomic="false"
       >
-        {lines.length === 0 && !isLoading && (
+        {lines.length === 0 && !isLoading && !children && (
           <div className="flex items-center justify-center h-full text-slate-600">
             <span className="text-xs">Type a message to start...</span>
           </div>
