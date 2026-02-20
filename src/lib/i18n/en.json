@@ -35,6 +35,7 @@
     "price": "BTC/USD",
     "marketCap": "Market Cap",
     "hashRate": "Hash Rate",
+    "networkHealth": "Network Health",
     "change24h": "24h Change"
   },
   "chat": {
