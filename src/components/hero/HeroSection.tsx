@@ -1,10 +1,22 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { motion, useScroll, useTransform } from 'framer-motion';
 import { Locale } from '@/types';
 import { NetworkNodes } from './NetworkNodes';
 import { ProtocolLayers } from '../protocol-layers/ProtocolLayers';
-import { ArrowRight, Globe, Activity, Server } from 'lucide-react';
+import {
+  ArrowRight,
+  Globe,
+  Activity,
+  Server,
+  Bitcoin,
+  Zap,
+  Cpu,
+  Terminal,
+  Sparkles,
+  ChevronDown
+} from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 interface HeroSectionProps {
   lang: Locale;
@@ -28,6 +40,15 @@ interface HeroSectionProps {
 }
 
 export function HeroSection({ lang, dict }: HeroSectionProps) {
+  const [mounted, setMounted] = useState(false);
+  const { scrollY } = useScroll();
+  const opacity = useTransform(scrollY, [0, 300], [1, 0.3]);
+  const scale = useTransform(scrollY, [0, 300], [1, 0.95]);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const scrollToChat = () => {
     document.getElementById('chat-section')?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -36,41 +57,90 @@ export function HeroSection({ lang, dict }: HeroSectionProps) {
     document.getElementById('markets-section')?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  // Helper para mostrar el nombre según el idioma
-  const getLayerName = (layerKey: 'layer1' | 'layer2' | 'layer3') => {
-    return dict.infrastructure[layerKey].name;
-  };
+  // Terminal typing effect
+  const [displayText, setDisplayText] = useState('');
+  const fullText = lang === 'en'
+    ? 'root@bitcoin:~# ./global-settlement-layer'
+    : 'root@bitcoin:~# ./capa-de-liquidación-global';
+
+  useEffect(() => {
+    if (!mounted) return;
+
+    let i = 0;
+    const typing = setInterval(() => {
+      if (i < fullText.length) {
+        setDisplayText(fullText.slice(0, i + 1));
+        i++;
+      } else {
+        clearInterval(typing);
+      }
+    }, 50);
+
+    return () => clearInterval(typing);
+  }, [fullText, mounted]);
 
   return (
     <section className="relative min-h-screen flex flex-col overflow-hidden bg-slate-950">
-      {/* Background mejorado con spotlight */}
+      {/* Background mejorado con spotlight y grid animado */}
       <div className="absolute inset-0">
-        <div 
+        {/* Grid más denso y dinámico */}
+        <motion.div
+          animate={{
+            backgroundPosition: ['0px 0px', '68px 68px'],
+          }}
+          transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
           className="absolute inset-0 opacity-[0.04]"
           style={{
             backgroundImage: `linear-gradient(#f7931a 1px, transparent 1px), linear-gradient(90deg, #f7931a 1px, transparent 1px)`,
             backgroundSize: '68px 68px'
           }}
         />
-        {/* Spotlight central naranja */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(249,115,22,0.14)_0%,transparent_65%)]" />
-        
+
+        {/* Múltiples spotlights */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(249,115,22,0.12)_0%,transparent_60%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_60%,rgba(249,115,22,0.08)_0%,transparent_70%)]" />
+
         <NetworkNodes />
+
+        {/* Gradientes más sutiles */}
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-slate-950/80 to-slate-950" />
-        <div className="absolute inset-0 bg-gradient-to-r from-black/50 via-transparent to-black/50" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-transparent to-black/70" />
+
+        {/* Línea de horizonte brillante */}
+        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-orange-500/30 to-transparent" />
       </div>
 
-      <div className="relative z-10 flex-1 flex flex-col justify-center max-w-7xl mx-auto px-6 lg:px-8 py-24">
-        
-        {/* Badge premium con pulse neon */}
-        <motion.div 
+      <motion.div
+        style={{ opacity, scale }}
+        className="relative z-10 flex-1 flex flex-col justify-center max-w-7xl mx-auto px-6 lg:px-8 py-24"
+      >
+
+        {/* Terminal Header - NUEVO */}
+        <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="flex justify-center mb-8"
         >
-          <div className="group relative px-8 py-3 bg-slate-900/70 backdrop-blur-2xl border border-orange-500/40 rounded-2xl text-orange-400 text-sm font-mono tracking-[4px] uppercase flex items-center gap-3 shadow-2xl shadow-orange-500/10 hover:border-orange-500/60 hover:scale-105 transition-all duration-300">
-            <div className="w-2.5 h-2.5 rounded-full bg-orange-500 ring-2 ring-orange-500/30 group-hover:ring-orange-500/70 transition-all" />
-            {dict.infrastructure.title}
+          <div className="group relative px-6 py-3 bg-slate-900/90 backdrop-blur-2xl border border-slate-700/60 rounded-2xl font-mono text-sm flex items-center gap-4 shadow-2xl">
+            {/* Terminal dots */}
+            <div className="flex gap-2">
+              <div className="w-3 h-3 rounded-full bg-red-500/70" />
+              <div className="w-3 h-3 rounded-full bg-amber-500/70" />
+              <div className="w-3 h-3 rounded-full bg-green-500/70" />
+            </div>
+
+            {/* Typing effect */}
+            <code className="text-slate-400">
+              <span className="text-green-400">bitcoin@agent</span>:<span className="text-blue-400">~</span>$
+              <span className="ml-2 text-orange-400">{displayText}</span>
+              <span className="animate-pulse ml-1">▊</span>
+            </code>
+
+            {/* Network status */}
+            <div className="hidden md:flex items-center gap-2 ml-4 pl-4 border-l border-slate-700">
+              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+              <span className="text-xs text-slate-500">mainnet</span>
+            </div>
           </div>
         </motion.div>
 
@@ -78,7 +148,7 @@ export function HeroSection({ lang, dict }: HeroSectionProps) {
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1, delay: 0.1 }}
+          transition={{ duration: 1, delay: 0.2 }}
           className="text-center mb-12"
         >
           <h1 className="text-5xl md:text-7xl lg:text-[5.2rem] font-bold leading-[1.05] tracking-tighter mb-6">
@@ -86,70 +156,100 @@ export function HeroSection({ lang, dict }: HeroSectionProps) {
               {dict.title}
             </span>
           </h1>
-          
+
           <p className="text-2xl md:text-3xl text-slate-300 font-light tracking-tight mb-4">
             {dict.subtitle}
           </p>
 
-          <p className="text-lg md:text-xl text-slate-400 max-w-3xl mx-auto leading-relaxed">
-            {lang === 'en'
-              ? 'A decentralized infrastructure for transferring value across the internet. Open, permissionless, and always running—like email, but for money.'
-              : 'Una infraestructura descentralizada para transferir valor a través de internet. Abierta, sin permisos y siempre funcionando—como el email, pero para dinero.'}
-          </p>
+          {/* Descripción con glow */}
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4 }}
+            className="text-lg md:text-xl text-slate-400 max-w-3xl mx-auto leading-relaxed relative"
+          >
+            <span className="relative inline-block">
+              {lang === 'en'
+                ? 'A decentralized infrastructure for transferring value across the internet. Open, permissionless, and always running—like email, but for money.'
+                : 'Una infraestructura descentralizada para transferir valor a través de internet. Abierta, sin permisos y siempre funcionando—como el email, pero para dinero.'}
+              <span className="absolute -inset-1 bg-orange-500/5 blur-xl rounded-full" />
+            </span>
+          </m.p>
         </motion.div>
 
-        {/* Stats glassmorphic premium */}
+        {/* Stats glassmorphic premium con animación al hover */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
+          transition={{ delay: 0.5 }}
           className="grid grid-cols-1 sm:grid-cols-3 gap-5 max-w-3xl mx-auto mb-14"
         >
-          <div className="group bg-slate-900/60 backdrop-blur-xl border border-slate-700/80 hover:border-orange-500/40 rounded-3xl p-6 text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-orange-500/20">
-            <div className="flex items-center justify-center gap-3 mb-3">
-              <Server className="w-5 h-5 text-orange-500 group-hover:scale-110 transition-transform" />
-              <span className="text-4xl font-bold text-orange-400 font-mono tracking-tighter">15K+</span>
-            </div>
-            <div className="text-xs uppercase tracking-[2px] text-slate-500 font-mono">
-              {dict.stats.nodes}
-            </div>
-          </div>
+          {[
+            { icon: Server, value: '15K+', label: dict.stats.nodes, color: 'orange', metric: 'verified nodes' },
+            { icon: Activity, value: '99.98%', label: dict.stats.uptime, color: 'green', metric: 'uptime since 2009' },
+            { icon: Globe, value: '180+', label: dict.stats.countries, color: 'blue', metric: 'countries reached' },
+          ].map((stat, idx) => {
+            const Icon = stat.icon;
+            const colorClasses = {
+              orange: 'hover:border-orange-500/40 hover:shadow-orange-500/20 text-orange-400',
+              green: 'hover:border-green-500/40 hover:shadow-green-500/20 text-green-400',
+              blue: 'hover:border-blue-500/40 hover:shadow-blue-500/20 text-blue-400',
+            }[stat.color];
 
-          <div className="group bg-slate-900/60 backdrop-blur-xl border border-slate-700/80 hover:border-green-500/40 rounded-3xl p-6 text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-green-500/20">
-            <div className="flex items-center justify-center gap-3 mb-3">
-              <Activity className="w-5 h-5 text-green-500 group-hover:scale-110 transition-transform" />
-              <span className="text-4xl font-bold text-green-400 font-mono tracking-tighter">99.98%</span>
-            </div>
-            <div className="text-xs uppercase tracking-[2px] text-slate-500 font-mono">
-              {dict.stats.uptime}
-            </div>
-          </div>
+            return (
+              <motion.div
+                key={idx}
+                whileHover={{ y: -5 }}
+                className={`group bg-slate-900/60 backdrop-blur-xl border border-slate-700/80 hover:border-${stat.color}-500/40 rounded-3xl p-6 text-center transition-all duration-300 hover:shadow-2xl relative overflow-hidden`}
+              >
+                {/* Metric badge - NUEVO */}
+                <div className="absolute top-3 right-3 text-[0.6rem] font-mono text-slate-600">
+                  {stat.metric}
+                </div>
 
-          <div className="group bg-slate-900/60 backdrop-blur-xl border border-slate-700/80 hover:border-blue-500/40 rounded-3xl p-6 text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-blue-500/20">
-            <div className="flex items-center justify-center gap-3 mb-3">
-              <Globe className="w-5 h-5 text-blue-500 group-hover:scale-110 transition-transform" />
-              <span className="text-4xl font-bold text-blue-400 font-mono tracking-tighter">180+</span>
-            </div>
-            <div className="text-xs uppercase tracking-[2px] text-slate-500 font-mono">
-              {dict.stats.countries}
-            </div>
-          </div>
+                <div className={`flex items-center justify-center gap-3 mb-3`}>
+                  <Icon className={`w-5 h-5 text-${stat.color}-500 group-hover:scale-110 transition-transform`} />
+                  <span className={`text-4xl font-bold ${colorClasses} font-mono tracking-tighter`}>
+                    {stat.value}
+                  </span>
+                </div>
+                <div className="text-xs uppercase tracking-[2px] text-slate-500 font-mono">
+                  {stat.label}
+                </div>
+
+                {/* Glow effect on hover */}
+                <div className={`absolute inset-0 bg-${stat.color}-500/0 group-hover:bg-${stat.color}-500/5 transition-colors duration-500`} />
+              </motion.div>
+            );
+          })}
         </motion.div>
 
-        {/* Target mejorado */}
-        <motion.div 
+        {/* Live Network Status - NUEVO (reemplaza bitcoinbeach) */}
+        <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-          className="flex items-center justify-center gap-4 mb-16 text-sm font-mono"
+          transition={{ delay: 0.6 }}
+          className="flex flex-wrap items-center justify-center gap-6 mb-16"
         >
-          <div className="flex items-center gap-2 text-slate-400">
-            <Globe className="w-4 h-4" />
-            <span>Live on</span>
+          <div className="flex items-center gap-3 px-6 py-3 bg-slate-900/50 backdrop-blur-sm rounded-2xl border border-slate-700/50">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+              <span className="text-sm font-mono text-slate-400">Network Status:</span>
+            </div>
+            <span className="text-sm font-mono text-green-400">Healthy</span>
+            <span className="text-xs text-slate-600">(block 867,530)</span>
           </div>
-          <div className="flex items-center gap-2 text-orange-400">
-            <ArrowRight className="w-4 h-4" />
-            <span className="text-lg tracking-wider">bitcoinbeach.com</span>
+
+          <div className="flex items-center gap-3 px-6 py-3 bg-slate-900/50 backdrop-blur-sm rounded-2xl border border-slate-700/50">
+            <Zap className="w-4 h-4 text-orange-500" />
+            <span className="text-sm font-mono text-slate-400">Hashrate:</span>
+            <span className="text-sm font-mono text-orange-400">850 EH/s</span>
+          </div>
+
+          <div className="flex items-center gap-3 px-6 py-3 bg-slate-900/50 backdrop-blur-sm rounded-2xl border border-slate-700/50">
+            <Cpu className="w-4 h-4 text-blue-500" />
+            <span className="text-sm font-mono text-slate-400">Mempool:</span>
+            <span className="text-sm font-mono text-blue-400">~45k txs</span>
           </div>
         </motion.div>
 
@@ -157,53 +257,82 @@ export function HeroSection({ lang, dict }: HeroSectionProps) {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
+          transition={{ delay: 0.7 }}
           className="flex flex-col sm:flex-row gap-5 justify-center items-center mb-20"
         >
-          <button
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.98 }}
             onClick={scrollToChat}
-            className="group relative px-10 py-5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-slate-950 font-bold text-xl rounded-2xl transition-all flex items-center gap-3 shadow-2xl shadow-orange-500/40 hover:shadow-orange-500/60 hover:scale-[1.03] overflow-hidden"
+            className="group relative px-10 py-5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-slate-950 font-bold text-xl rounded-2xl transition-all flex items-center gap-3 shadow-2xl shadow-orange-500/40 hover:shadow-orange-500/60 overflow-hidden"
           >
             <span>{dict.cta}</span>
-            <span className="group-hover:translate-x-2 transition-transform duration-300">→</span>
-            
-            {/* Shine effect */}
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-0 transition-transform duration-700" />
-          </button>
-          
-          <button
+            <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
+
+            {/* Shine effect mejorado */}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-[200%] transition-transform duration-1000" />
+
+            {/* Sparkles on hover */}
+            <Sparkles className="absolute -top-1 -right-1 w-4 h-4 text-white/50 opacity-0 group-hover:opacity-100 transition-opacity" />
+          </motion.button>
+
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             onClick={scrollToMarkets}
-            className="px-8 py-5 bg-slate-900/70 backdrop-blur-xl border border-slate-600 hover:border-slate-400 text-slate-300 font-mono rounded-2xl transition-all hover:bg-slate-800 hover:text-white"
+            className="group px-8 py-5 bg-slate-900/70 backdrop-blur-xl border border-slate-600 hover:border-slate-400 text-slate-300 font-mono rounded-2xl transition-all hover:bg-slate-800 hover:text-white flex items-center gap-2"
           >
-            {dict.secondaryCta || (lang === 'en' ? 'View Market Data →' : 'Ver Datos de Mercado →')}
-          </button>
+            <Terminal className="w-4 h-4" />
+            <span>{dict.secondaryCta || (lang === 'en' ? './view-market-data' : './ver-datos-mercado')}</span>
+          </motion.button>
         </motion.div>
 
-        {/* Protocol Layers */}
+        {/* Protocol Layers con nuevo wrapper */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.96 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.8 }}
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.9 }}
           className="relative"
         >
           <div className="absolute -inset-6 bg-gradient-to-t from-slate-950 via-transparent to-transparent z-10 pointer-events-none" />
           <ProtocolLayers lang={lang} />
         </motion.div>
-      </div>
+      </motion.div>
 
-      {/* Scroll indicator más elegante */}
+      {/* Scroll indicator más elegante con texto */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 1.3 }}
+        transition={{ delay: 1.5 }}
         className="absolute bottom-12 left-1/2 -translate-x-1/2 z-20"
       >
-        <div className="w-6 h-10 border border-slate-600/80 rounded-full flex justify-center pt-2 backdrop-blur-sm">
-          <motion.div
-            animate={{ y: [0, 14, 0] }}
-            transition={{ duration: 1.8, repeat: Infinity }}
-            className="w-1 h-1 bg-orange-500 rounded-full"
-          />
+        <motion.div
+          animate={{ y: [0, 8, 0] }}
+          transition={{ duration: 2, repeat: Infinity }}
+          className="flex flex-col items-center gap-3"
+        >
+          <span className="text-xs font-mono text-slate-600 tracking-widest uppercase">
+            Scroll
+          </span>
+          <div className="w-5 h-8 border border-slate-600/60 rounded-full flex justify-center pt-2 backdrop-blur-sm">
+            <div className="w-1 h-1 bg-orange-500 rounded-full" />
+          </div>
+          <ChevronDown className="w-4 h-4 text-slate-600 animate-bounce" />
+        </motion.div>
+      </motion.div>
+
+      {/* Badge flotante de versión - NUEVO */}
+      <motion.div
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 2 }}
+        className="absolute bottom-12 right-12 z-20 hidden lg:block"
+      >
+        <div className="flex items-center gap-2 px-3 py-2 bg-slate-900/50 backdrop-blur-sm rounded-lg border border-slate-700/50 text-xs font-mono">
+          <Bitcoin className="w-3 h-3 text-orange-500" />
+          <span className="text-slate-400">v2.0.1</span>
+          <span className="text-slate-600">|</span>
+          <span className="text-green-500">mainnet</span>
         </div>
       </motion.div>
     </section>
