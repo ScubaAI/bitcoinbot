@@ -15,7 +15,8 @@ import {
   Github,
   Twitter,
   Terminal,
-  Lock
+  Lock,
+  Info
 } from 'lucide-react';
 
 interface FooterProps {
@@ -40,7 +41,8 @@ const defaultDict = {
     system: "System",
     dashboard: "Immune Dashboard",
     beacon: "Native Beacon",
-    challenge: "Challenge Zone"
+    challenge: "Challenge Zone",
+    about: "About Us"
   },
   es: {
     resources: "Lectura Esencial",
@@ -57,7 +59,8 @@ const defaultDict = {
     system: "Sistema",
     dashboard: "Panel Inmune",
     beacon: "Beacon Nativo",
-    challenge: "Zona de Desafíos"
+    challenge: "Zona de Desafíos",
+    about: "Nosotros"
   }
 };
 
@@ -105,22 +108,32 @@ export function Footer({ lang, dict }: FooterProps) {
 
   const systemLinks = [
     {
+      title: t.about,
+      href: `/${lang}/about`,
+      icon: Info,
+      desc: lang === 'en' ? 'About this agent' : 'Sobre este agente',
+      badge: 'INFO'
+    },
+    {
       title: t.dashboard,
       href: `/${lang}/satoshi/immune-dashboard`,
       icon: Shield,
       desc: lang === 'en' ? 'Security monitoring' : 'Monitoreo de seguridad',
+      badge: 'ADMIN'
     },
     {
       title: t.beacon,
       href: `/${lang}/satoshi/beacon/native`,
       icon: Zap,
       desc: lang === 'en' ? 'On-chain signaling' : 'Señalización on-chain',
+      badge: 'BTC'
     },
     {
       title: t.challenge,
       href: `/${lang}/challenge/pow`,
       icon: Terminal,
       desc: lang === 'en' ? 'Proof of Work' : 'Prueba de Trabajo',
+      badge: 'POW'
     },
   ];
 
@@ -155,9 +168,7 @@ export function Footer({ lang, dict }: FooterProps) {
                 rel="noopener noreferrer"
                 className="w-9 h-9 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-white hover:border-orange-500/50 transition-all"
               >
-                <div className="flex items-center justify-center w-full h-full">
-                  <Github className="w-4 h-4" />
-                </div>
+                <Github className="w-4 h-4" />
               </a>
               <a
                 href="https://twitter.com/visionaryailat"
@@ -165,17 +176,13 @@ export function Footer({ lang, dict }: FooterProps) {
                 rel="noopener noreferrer"
                 className="w-9 h-9 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-white hover:border-orange-500/50 transition-all"
               >
-                <div className="flex items-center justify-center w-full h-full">
-                  <Twitter className="w-4 h-4" />
-                </div>
+                <Twitter className="w-4 h-4" />
               </a>
               <a
                 href="mailto:aisynths@proton.me"
                 className="w-9 h-9 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-white hover:border-orange-500/50 transition-all"
               >
-                <div className="flex items-center justify-center w-full h-full">
-                  <Mail className="w-4 h-4" />
-                </div>
+                <Mail className="w-4 h-4" />
               </a>
             </div>
           </div>
@@ -238,7 +245,7 @@ export function Footer({ lang, dict }: FooterProps) {
             </ul>
           </div>
 
-          {/* System Navigation - NUEVO */}
+          {/* System Navigation */}
           <div>
             <h3 className="text-white font-mono font-bold mb-4 flex items-center gap-2">
               <Lock className="w-4 h-4 text-orange-500" />
@@ -255,8 +262,12 @@ export function Footer({ lang, dict }: FooterProps) {
                     <div>
                       <div className="text-slate-300 group-hover:text-white transition-colors flex items-center gap-1">
                         {link.title}
-                        <span className="text-[10px] px-1.5 py-0.5 bg-orange-500/20 text-orange-400 rounded-full border border-orange-500/30 font-mono">
-                          APP
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded-full border font-mono ${link.badge === 'ADMIN' ? 'bg-red-500/20 text-red-400 border-red-500/30' :
+                            link.badge === 'BTC' ? 'bg-orange-500/20 text-orange-400 border-orange-500/30' :
+                              link.badge === 'POW' ? 'bg-purple-500/20 text-purple-400 border-purple-500/30' :
+                                'bg-blue-500/20 text-blue-400 border-blue-500/30'
+                          }`}>
+                          {link.badge}
                         </span>
                       </div>
                       <div className="text-xs text-slate-500">{link.desc}</div>

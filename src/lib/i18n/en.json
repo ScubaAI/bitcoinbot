@@ -69,10 +69,6 @@
   "footer": {
     "resources": "Essential Reading",
     "documentation": "Developer Docs",
-    "system": "System",
-    "dashboard": "Immune Dashboard",
-    "beacon": "Native Beacon",
-    "challenge": "Challenge Zone",
     "protocol": "Bitcoin Whitepaper",
     "lightning": "Lightning Paper",
     "books": "Security Guide",
@@ -82,14 +78,12 @@
     "contact": "Contact",
     "mission": "Mission",
     "missionText": "Democratizing Bitcoin education through AI, one community at a time.",
+    "system": "System",
+    "dashboard": "Immune Dashboard",
+    "beacon": "Native Beacon",
+    "challenge": "Challenge Zone",
+    "about": "About Us",
     "privacy": "Privacy",
     "terms": "Terms"
-  },
-  "errors": {
-    "generic": "An error occurred. Please try again.",
-    "network": "Network error. Check your connection.",
-    "rateLimit": "Too many requests. Please wait a moment.",
-    "notFound": "Page not found",
-    "serverError": "Server error. Please try again later."
   }
 }

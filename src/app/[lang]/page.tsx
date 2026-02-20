@@ -59,6 +59,7 @@ export default async function Home({ params }: { params: { lang: 'en' | 'es' } }
         dashboard: "Dashboard",
         beacon: "Beacon",
         challenge: "Challenge",
+        about: "About",
         protocol: "Whitepaper",
         lightning: "Lightning Paper",
         books: "Security Guide",
