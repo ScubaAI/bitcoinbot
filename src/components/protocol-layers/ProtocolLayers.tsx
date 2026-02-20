@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { Database, Zap, Globe, Layers, ArrowDown, Bitcoin, Sparkles, HelpCircle } from 'lucide-react';
+import { Database, Zap, Globe, Layers, ArrowDown, Bitcoin, Sparkles, HelpCircle, ChevronDown } from 'lucide-react';
 import { useState } from 'react';
 
 interface ProtocolLayersProps {
@@ -42,19 +42,19 @@ const layers: Layer[] = [
     esName: 'Capa Base (L1)',
     icon: Database,
     color: 'text-orange-500',
-    bgColor: 'bg-orange-500/10 border-orange-500/20 group-hover:border-orange-500/40',
+    bgColor: 'bg-orange-500/10 border-orange-500/20',
     description: {
       en: 'Settlement & finality. The foundation where all transactions are permanently recorded.',
       es: 'Liquidación y finalidad. La base donde todas las transacciones se registran permanentemente.'
     },
     analogy: {
-      en: '🏛️ Like a bank vault: secure, slow, and permanent. Where the final records live.',
-      es: '🏛️ Como una caja fuerte: segura, lenta y permanente. Donde viven los registros finales.'
+      en: '🏛️ Like a bank vault: secure, slow, and permanent.',
+      es: '🏛️ Como una caja fuerte: segura, lenta y permanente.'
     },
     features: [
-      { name: 'Proof-of-Work', tooltip: 'Miners compete to secure the network using computational power' },
-      { name: '21M cap', tooltip: 'Only 21 million Bitcoin will ever exist - digital scarcity' },
-      { name: 'Decentralized consensus', tooltip: 'No single entity controls the network - everyone verifies' }
+      { name: 'Proof-of-Work', tooltip: 'Miners secure the network with computational power' },
+      { name: '21M cap', tooltip: 'Digital scarcity - only 21 million Bitcoin will ever exist' },
+      { name: 'Decentralized', tooltip: 'No single entity controls the network' }
     ],
     stats: [
       { label: 'Block time', value: '~10 min' },
@@ -68,19 +68,19 @@ const layers: Layer[] = [
     esName: 'Lightning (L2)',
     icon: Zap,
     color: 'text-blue-500',
-    bgColor: 'bg-blue-500/10 border-blue-500/20 group-hover:border-orange-500/40',
+    bgColor: 'bg-blue-500/10 border-blue-500/20',
     description: {
       en: 'Instant payments at scale. A layer ON TOP of Bitcoin for fast, cheap transactions.',
       es: 'Pagos instantáneos a escala. Una capa ENCIMA de Bitcoin para transacciones rápidas y baratas.'
     },
     analogy: {
-      en: '⚡ Like a tab at a bar: open a tab (channel), drink all night (transactions), settle once at close.',
-      es: '⚡ Como una cuenta en un bar: abres una cuenta (canal), bebes toda la noche (transacciones), pagas al cerrar.'
+      en: '⚡ Like a tab at a bar: open a tab, transact all night, settle once.',
+      es: '⚡ Como una cuenta en un bar: abres cuenta, transaccionas, pagas al cerrar.'
     },
     features: [
-      { name: 'Payment Channels', tooltip: 'Private pathways between users for unlimited off-chain transactions' },
-      { name: 'Atomic Swaps', tooltip: 'Trustless exchange between different cryptocurrencies' },
-      { name: 'Micro-payments', tooltip: 'Send amounts as small as 1 satoshi (fractions of a cent)' }
+      { name: 'Payment Channels', tooltip: 'Private pathways for unlimited off-chain transactions' },
+      { name: 'Atomic Swaps', tooltip: 'Trustless exchange between cryptocurrencies' },
+      { name: 'Micro-payments', tooltip: 'Send amounts as small as 1 satoshi' }
     ],
     stats: [
       { label: 'Speed', value: 'Instant' },
@@ -94,19 +94,19 @@ const layers: Layer[] = [
     esName: 'Aplicaciones (L3)',
     icon: Globe,
     color: 'text-purple-500',
-    bgColor: 'bg-purple-500/10 border-purple-500/20 group-hover:border-orange-500/40',
+    bgColor: 'bg-purple-500/10 border-purple-500/20',
     description: {
       en: 'Applications built on top. Wallets, services, and protocols that make Bitcoin useful.',
       es: 'Aplicaciones construidas encima. Wallets, servicios y protocolos que hacen útil a Bitcoin.'
     },
     analogy: {
-      en: '📱 Like apps on your phone: the phone (L1) and data plan (L2) enable Instagram (L3).',
-      es: '📱 Como apps en tu teléfono: el teléfono (L1) y el plan de datos (L2) permiten Instagram (L3).'
+      en: '📱 Like apps on your phone: L1 is the phone, L2 the data plan, L3 the apps.',
+      es: '📱 Como apps en tu teléfono: L1 es el teléfono, L2 el plan de datos, L3 las apps.'
     },
     features: [
-      { name: 'Non-custodial wallets', tooltip: 'You control your private keys - not your keys, not your coins' },
-      { name: 'DLCs', tooltip: 'Discreet Log Contracts - smart contracts that keep data private' },
-      { name: 'RGB/Taproot Assets', tooltip: 'Tokens and assets issued on Bitcoin using RGB protocol' }
+      { name: 'Non-custodial wallets', tooltip: 'You control your private keys' },
+      { name: 'DLCs', tooltip: 'Discreet Log Contracts - private smart contracts' },
+      { name: 'RGB/Assets', tooltip: 'Tokens issued on Bitcoin using RGB protocol' }
     ],
     stats: [
       { label: 'Wallets', value: '100+' },
@@ -118,261 +118,247 @@ const layers: Layer[] = [
 
 export function ProtocolLayers({ lang = 'en' }: ProtocolLayersProps) {
   const [expandedLayer, setExpandedLayer] = useState<string | null>(null);
-  const [hoveredFeature, setHoveredFeature] = useState<string | null>(null);
+  const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
 
   const t = {
     en: {
-      title: 'Understanding Bitcoin\'s Layers',
-      subtitle: 'Bitcoin is more than one thing. It\'s a stack of technologies working together.',
-      analogy: 'Analogy',
-      features: 'Key Features',
-      stats: 'Network Stats',
-      learnMore: 'Click each layer to learn more',
+      title: 'Bitcoin Layers',
+      subtitle: 'A stack of technologies working together.',
+      tip: 'Lightning is to Bitcoin like HTTP is to TCP/IP. A layer, not a separate network.',
       l1Note: 'The foundation. All transactions eventually settle here.',
       l2Note: 'Built ON TOP of Bitcoin. Not a separate token!',
       l3Note: 'Applications that make Bitcoin usable day-to-day.',
-      tip: 'Lightning is to Bitcoin like... HTTP is to TCP/IP. A layer, not a separate network.'
     },
     es: {
-      title: 'Entendiendo las Capas de Bitcoin',
-      subtitle: 'Bitcoin es más que una cosa. Es un stack de tecnologías trabajando juntas.',
-      analogy: 'Analogía',
-      features: 'Características',
-      stats: 'Estadísticas',
-      learnMore: 'Haz clic en cada capa para aprender más',
+      title: 'Capas de Bitcoin',
+      subtitle: 'Un stack de tecnologías trabajando juntas.',
+      tip: 'Lightning es a Bitcoin como HTTP es a TCP/IP. Una capa, no una red separada.',
       l1Note: 'La base. Todas las transacciones eventualmente se liquidan aquí.',
       l2Note: 'Construida SOBRE Bitcoin. ¡No es un token separado!',
       l3Note: 'Aplicaciones que hacen útil a Bitcoin en el día a día.',
-      tip: 'Lightning es a Bitcoin como... HTTP es a TCP/IP. Una capa, no una red separada.'
     }
   }[lang];
 
   return (
-    <div className="w-full max-w-5xl mx-auto px-6 py-20 bg-slate-950">
-      {/* Header educativo */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="text-center mb-12"
-      >
-        <div className="inline-flex items-center gap-3 px-6 py-3 bg-slate-900 rounded-3xl border border-slate-700 mb-6">
-          <Layers className="w-5 h-5 text-[#f7931a]" />
-          <span className="text-lg font-mono tracking-widest text-slate-200">{t.title}</span>
-        </div>
-        <p className="text-2xl text-slate-400 max-w-3xl mx-auto leading-relaxed">{t.subtitle}</p>
-      </motion.div>
+    <section className="w-full bg-slate-950 py-12 sm:py-16 lg:py-20">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="text-center mb-8 sm:mb-12"
+        >
+          <div className="inline-flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-2 sm:py-3 bg-slate-900 rounded-2xl border border-slate-700 mb-4 sm:mb-6">
+            <Layers className="w-4 h-4 sm:w-5 sm:h-5 text-[#f7931a]" />
+            <span className="text-sm sm:text-lg font-mono tracking-wider text-slate-200">{t.title}</span>
+          </div>
+          <p className="text-base sm:text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed px-2">
+            {t.subtitle}
+          </p>
+        </motion.div>
 
-      {/* Mensaje educativo destacado sobre Lightning */}
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="mb-12 p-8 bg-gradient-to-br from-blue-950/80 to-slate-900 border border-blue-500/30 rounded-3xl flex items-start gap-5"
-      >
-        <Sparkles className="w-6 h-6 text-blue-400 flex-shrink-0 mt-1" />
-        <p className="text-lg text-blue-200 leading-relaxed">{t.tip}</p>
-      </motion.div>
+        {/* Tip box */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }}
+          className="mb-8 sm:mb-12 p-4 sm:p-6 bg-blue-950/30 border border-blue-500/20 rounded-2xl flex items-start gap-3 sm:gap-4"
+        >
+          <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-blue-400 flex-shrink-0 mt-0.5" />
+          <p className="text-sm sm:text-base text-blue-200 leading-relaxed">{t.tip}</p>
+        </motion.div>
 
-      {/* Visualización de capas como edificio elegante */}
-      <div className="relative bg-slate-900 rounded-3xl border border-slate-800 p-12">
-        {/* Fondo de rejilla sutil */}
-        <div className="absolute inset-0 opacity-10 pointer-events-none">
-          <div className="w-full h-full" style={{
-            backgroundImage: `radial-gradient(circle at 1px 1px, #f7931a 1px, transparent 0)`,
-            backgroundSize: '44px 44px'
-          }} />
-        </div>
+        {/* Layers container */}
+        <div className="relative bg-slate-900 rounded-2xl sm:rounded-3xl border border-slate-800 p-4 sm:p-6 lg:p-8">
+          {/* Layers stack */}
+          <div className="space-y-4 sm:space-y-6">
+            {layers.map((layer, index) => {
+              const Icon = layer.icon;
+              const isExpanded = expandedLayer === layer.id;
+              const isLightning = layer.id === 'l2';
 
-        {/* Capas visuales tipo torre */}
-        <div className="relative z-10 space-y-10">
-          {layers.map((layer, index) => {
-            const Icon = layer.icon;
-            const isExpanded = expandedLayer === layer.id;
-            const isLightning = layer.id === 'l2';
-
-            return (
-              <motion.div
-                key={layer.id}
-                initial={{ opacity: 0, x: -30 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.12 }}
-                className="relative"
-              >
-                {/* Línea conectora elegante */}
-                {index < layers.length - 1 && (
-                  <div className="absolute left-[52px] -bottom-6 w-px h-10 bg-gradient-to-b from-[#f7931a]/40 via-[#f7931a]/20 to-transparent" />
-                )}
-
-                {/* Tarjeta de capa */}
+              return (
                 <motion.div
-                  whileHover={{ scale: 1.015, y: -4 }}
-                  onClick={() => setExpandedLayer(isExpanded ? null : layer.id)}
-                  className={`
-                    group relative p-10 rounded-3xl border-2 transition-all cursor-pointer shadow-2xl
-                    ${layer.bgColor} ${isLightning ? 'ring-2 ring-offset-4 ring-offset-slate-900 ring-blue-500/40 shadow-blue-500/10' : ''}
-                  `}
+                  key={layer.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.1 }}
+                  className="relative"
                 >
-                  {isLightning && (
-                    <div className="absolute -top-4 -right-4 px-6 py-2 bg-gradient-to-r from-blue-600 to-[#f7931a] text-white text-sm font-mono rounded-2xl shadow-xl flex items-center gap-2 z-20">
-                      <Bitcoin className="w-4 h-4" />
-                      Built on Bitcoin
-                    </div>
+                  {/* Connector line */}
+                  {index < layers.length - 1 && (
+                    <div className="hidden sm:block absolute left-6 sm:left-8 top-full w-px h-4 sm:h-6 bg-gradient-to-b from-[#f7931a]/40 to-transparent" />
                   )}
 
-                  <div className="flex items-start gap-8">
-                    {/* Icono grande */}
-                    <div className={`
-                      p-6 rounded-2xl bg-slate-900 border-2 transition-all flex-shrink-0
-                      ${isLightning ? 'border-blue-500/60' : 'border-slate-700 group-hover:border-[#f7931a]/40'}
-                    `}>
-                      <Icon className={`w-10 h-10 ${layer.color}`} />
-                    </div>
+                  {/* Layer card */}
+                  <div
+                    onClick={() => setExpandedLayer(isExpanded ? null : layer.id)}
+                    className={`
+                      group relative p-4 sm:p-6 rounded-xl sm:rounded-2xl border-2 transition-all cursor-pointer
+                      ${layer.bgColor} ${isLightning ? 'ring-1 sm:ring-2 ring-blue-500/30' : ''}
+                      hover:border-opacity-60
+                    `}
+                  >
+                    {/* Lightning badge */}
+                    {isLightning && (
+                      <div className="absolute -top-2 -right-2 sm:-top-3 sm:-right-3 px-2 sm:px-3 py-1 bg-gradient-to-r from-blue-600 to-[#f7931a] text-white text-xs font-mono rounded-lg shadow-lg flex items-center gap-1">
+                        <Bitcoin className="w-3 h-3" />
+                        <span className="hidden sm:inline">Built on Bitcoin</span>
+                        <span className="sm:hidden">L2</span>
+                      </div>
+                    )}
 
-                    {/* Contenido */}
-                    <div className="flex-1 pt-1">
-                      <div className="flex items-center justify-between mb-6">
-                        <h3 className={`text-3xl font-bold font-mono tracking-tight flex items-center gap-3 ${layer.color}`}>
-                          {lang === 'es' ? layer.esName : layer.name}
-                          {isLightning && <span className="text-xs bg-blue-500/20 text-blue-400 px-3 py-1 rounded-full tracking-widest">L2</span>}
-                        </h3>
-
-                        <motion.div
-                          animate={{ rotate: isExpanded ? 180 : 0 }}
-                          transition={{ duration: 0.4 }}
-                          className="text-slate-400 group-hover:text-[#f7931a]"
-                        >
-                          <ArrowDown className="w-6 h-6" />
-                        </motion.div>
+                    {/* Main content - STACK en mobile, ROW en desktop */}
+                    <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
+                      {/* Icon */}
+                      <div className={`
+                        flex-shrink-0 p-3 sm:p-4 rounded-xl bg-slate-900 border-2 w-fit
+                        ${isLightning ? 'border-blue-500/40' : 'border-slate-700'}
+                      `}>
+                        <Icon className={`w-6 h-6 sm:w-8 sm:h-8 ${layer.color}`} />
                       </div>
 
-                      <p className="text-xl text-slate-300 leading-relaxed mb-6">
-                        {layer.description[lang]}
-                      </p>
+                      {/* Content */}
+                      <div className="flex-1 min-w-0">
+                        {/* Header */}
+                        <div className="flex items-center justify-between gap-2 mb-2 sm:mb-3">
+                          <h3 className={`text-lg sm:text-2xl font-bold font-mono ${layer.color}`}>
+                            {lang === 'es' ? layer.esName : layer.name}
+                          </h3>
+                          <ChevronDown 
+                            className={`w-5 h-5 text-slate-400 transition-transform flex-shrink-0 ${isExpanded ? 'rotate-180' : ''}`} 
+                          />
+                        </div>
 
-                      <div className="text-base text-slate-400 italic flex items-start gap-4 mb-8">
-                        <span className="text-2xl opacity-60">💡</span>
-                        <span>{layer.analogy[lang]}</span>
-                      </div>
+                        {/* Description */}
+                        <p className="text-sm sm:text-base text-slate-300 leading-relaxed mb-3">
+                          {layer.description[lang]}
+                        </p>
 
-                      {/* Features chips */}
-                      <div className="flex flex-wrap gap-3">
-                        {layer.features.map((feature) => (
-                          <div
-                            key={feature.name}
-                            className="relative"
-                            onMouseEnter={() => setHoveredFeature(feature.name)}
-                            onMouseLeave={() => setHoveredFeature(null)}
-                          >
-                            <span className={`
-                              text-sm px-5 py-2.5 rounded-2xl border font-mono transition-all cursor-help
-                              ${hoveredFeature === feature.name
-                                ? 'bg-slate-700 border-[#f7931a] text-white shadow-lg shadow-[#f7931a]/20'
-                                : 'bg-slate-900 border-slate-700 text-slate-400 hover:border-slate-500'
-                              }
-                            `}>
+                        {/* Analogy */}
+                        <p className="text-xs sm:text-sm text-slate-500 italic mb-4">
+                          {layer.analogy[lang]}
+                        </p>
+
+                        {/* Features - scroll horizontal en mobile */}
+                        <div className="flex flex-wrap gap-2 mb-4">
+                          {layer.features.map((feature) => (
+                            <button
+                              key={feature.name}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setActiveTooltip(activeTooltip === feature.name ? null : feature.name);
+                              }}
+                              className={`
+                                text-xs px-3 py-1.5 rounded-full border font-mono transition-all
+                                ${activeTooltip === feature.name
+                                  ? 'bg-[#f7931a] border-[#f7931a] text-black'
+                                  : 'bg-slate-900 border-slate-700 text-slate-400 hover:border-slate-500'
+                                }
+                              `}
+                            >
                               {feature.name}
-                              <HelpCircle className="inline w-3.5 h-3.5 ml-2 opacity-60" />
-                            </span>
+                            </button>
+                          ))}
+                        </div>
 
-                            <AnimatePresence>
-                              {hoveredFeature === feature.name && (
-                                <motion.div
-                                  initial={{ opacity: 0, y: 12 }}
-                                  animate={{ opacity: 1, y: 0 }}
-                                  exit={{ opacity: 0, y: 12 }}
-                                  className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-3 w-72 p-5 bg-slate-900 border border-slate-600 rounded-2xl text-sm text-slate-300 shadow-2xl"
-                                >
-                                  {feature.tooltip}
-                                  <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-3 h-3 bg-slate-900 border-r border-b border-slate-600 rotate-45" />
-                                </motion.div>
-                              )}
-                            </AnimatePresence>
-                          </div>
-                        ))}
+                        {/* Tooltip móvil (inline) */}
+                        <AnimatePresence>
+                          {activeTooltip && (
+                            <motion.div
+                              initial={{ opacity: 0, height: 0 }}
+                              animate={{ opacity: 1, height: 'auto' }}
+                              exit={{ opacity: 0, height: 0 }}
+                              className="mb-4 p-3 bg-slate-800 rounded-lg text-xs text-slate-300"
+                            >
+                              {layer.features.find(f => f.name === activeTooltip)?.tooltip}
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+
+                        {/* Expanded content */}
+                        <AnimatePresence>
+                          {isExpanded && (
+                            <motion.div
+                              initial={{ opacity: 0, height: 0 }}
+                              animate={{ opacity: 1, height: 'auto' }}
+                              exit={{ opacity: 0, height: 0 }}
+                              className="overflow-hidden"
+                            >
+                              <div className="pt-4 border-t border-slate-700/50">
+                                {/* Stats - 3 cols en desktop, 1 en mobile */}
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+                                  {layer.stats?.map((stat) => (
+                                    <div key={stat.label} className="text-center p-3 sm:p-4 bg-slate-900/60 rounded-xl border border-slate-700">
+                                      <div className="text-xs uppercase tracking-wider text-slate-500 mb-1">{stat.label}</div>
+                                      <div className="text-xl sm:text-2xl font-mono text-[#f7931a] font-semibold">{stat.value}</div>
+                                    </div>
+                                  ))}
+                                </div>
+
+                                {/* Features detail */}
+                                <div className="space-y-2 mb-4">
+                                  {layer.features.map((feature) => (
+                                    <div key={feature.name} className="flex gap-3 text-sm">
+                                      <span className="text-[#f7931a] flex-shrink-0">→</span>
+                                      <div>
+                                        <span className="font-mono text-slate-300">{feature.name}:</span>
+                                        <span className="text-slate-500 ml-2">{feature.tooltip}</span>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+
+                                {/* Note */}
+                                <div className="p-3 sm:p-4 bg-slate-900/50 border-l-4 border-[#f7931a] rounded-r-xl">
+                                  <p className="text-xs sm:text-sm text-slate-400">
+                                    {layer.id === 'l1' && t.l1Note}
+                                    {layer.id === 'l2' && t.l2Note}
+                                    {layer.id === 'l3' && t.l3Note}
+                                  </p>
+                                </div>
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
                       </div>
-
-                      {/* Expanded content */}
-                      <AnimatePresence>
-                        {isExpanded && (
-                          <motion.div
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: 'auto' }}
-                            exit={{ opacity: 0, height: 0 }}
-                            className="overflow-hidden"
-                          >
-                            <div className="mt-10 pt-10 border-t border-slate-700">
-                              {/* Stats grid */}
-                              <div className="grid grid-cols-3 gap-6 mb-10">
-                                {layer.stats?.map((stat) => (
-                                  <div key={stat.label} className="text-center p-6 bg-slate-900/60 rounded-2xl border border-slate-700">
-                                    <div className="text-xs uppercase tracking-widest text-slate-500 mb-2">{stat.label}</div>
-                                    <div className="text-3xl font-mono text-[#f7931a] font-semibold">{stat.value}</div>
-                                  </div>
-                                ))}
-                              </div>
-
-                              {/* All features */}
-                              <div className="space-y-4">
-                                <h4 className="text-sm font-mono text-slate-400 mb-4 tracking-widest">ALL FEATURES</h4>
-                                {layer.features.map((feature) => (
-                                  <div key={feature.name} className="text-sm text-slate-400 flex items-start gap-4">
-                                    <span className="text-[#f7931a] mt-1">→</span>
-                                    <span className="font-mono text-slate-300">{feature.name}:</span>
-                                    <span className="text-slate-500">{feature.tooltip}</span>
-                                  </div>
-                                ))}
-                              </div>
-
-                              {/* Nota educativa */}
-                              <div className="mt-10 p-6 bg-slate-900/50 border-l-4 border-[#f7931a] rounded-r-2xl">
-                                <p className="text-sm text-slate-400">
-                                  {layer.id === 'l1' && t.l1Note}
-                                  {layer.id === 'l2' && t.l2Note}
-                                  {layer.id === 'l3' && t.l3Note}
-                                </p>
-                              </div>
-                            </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
                     </div>
                   </div>
                 </motion.div>
-              </motion.div>
-            );
-          })}
+              );
+            })}
+          </div>
+
+          {/* Footer legend */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            className="mt-8 sm:mt-12 pt-6 border-t border-slate-800"
+          >
+            <div className="flex flex-wrap justify-center gap-4 sm:gap-8 text-xs sm:text-sm text-slate-500 font-mono">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-orange-500 rounded-full" />
+                <span>L1: Settlement</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-blue-500 rounded-full" />
+                <span>L2: Lightning</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-purple-500 rounded-full" />
+                <span>L3: Applications</span>
+              </div>
+            </div>
+
+            <p className="text-center mt-4 sm:mt-6 text-xs text-slate-600 font-mono">
+              ⚡ Lightning extends Bitcoin — it never replaces it ⚡
+            </p>
+          </motion.div>
         </div>
-
-        {/* Footer elegante */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1 }}
-          className="mt-16 pt-8 border-t border-slate-800 flex items-center justify-center gap-12 text-sm text-slate-500 font-mono"
-        >
-          <div className="flex items-center gap-3">
-            <div className="w-2 h-2 bg-orange-500 rounded-full" />
-            BASE LAYER
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="w-2 h-2 bg-blue-500 rounded-full" />
-            LIGHTNING NETWORK
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="w-2 h-2 bg-purple-500 rounded-full" />
-            APPLICATIONS
-          </div>
-        </motion.div>
-
-        {/* Mensaje clave final */}
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.3 }}
-          className="text-center mt-8 text-sm text-slate-600 font-mono tracking-widest"
-        >
-          ⚡ All layers work together. Lightning extends Bitcoin — it never replaces it. ⚡
-        </motion.p>
       </div>
-    </div>
+    </section>
   );
 }

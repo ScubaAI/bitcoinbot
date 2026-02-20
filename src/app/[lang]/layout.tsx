@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Locale, getDictionary } from '@/lib/i18n/config';
 import { Providers } from './providers';
+import HiddenMenu from '@/components/navigation/HiddenMenu';
 
 export const dynamic = 'force-dynamic';
 
@@ -42,6 +43,7 @@ export default async function LangLayout({
 }) {
   return (
     <div className="min-h-screen bg-terminal-black text-terminal-green font-mono">
+      <HiddenMenu lang={params.lang} />
       <Providers>
         {children}
       </Providers>
