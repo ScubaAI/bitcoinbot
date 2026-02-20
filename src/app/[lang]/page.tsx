@@ -4,6 +4,7 @@ import { MarketSection } from '@/components/markets/MarketSection';
 import { ChatInterface } from '@/components/chat/ChatInterface';
 import { TipJar } from '@/components/tip-jar/TipJar';
 import { Footer } from '@/components/footer/Footer';
+import { ProtocolLayers } from '@/components/protocol-layers/ProtocolLayers';
 import { getDictionary } from '@/lib/i18n/config';
 import type { TranslationKeys } from '@/lib/i18n/types';
 import fallbackDict from '@/lib/i18n/en.json';
@@ -28,6 +29,9 @@ export default async function Home({ params }: { params: { lang: 'en' | 'es' } }
 
       {/* Chat – El protagonista, justo después del Hero */}
       <ChatInterface lang={lang} dict={dict.chat} />
+
+      {/* Protocol Layers – Explicación técnica de las capas */}
+      <ProtocolLayers lang={lang} />
 
       {/* Comunidades – Prueba social viva */}
       <CircularEconomiesCarousel lang={lang} />

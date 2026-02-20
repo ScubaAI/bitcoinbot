@@ -460,6 +460,147 @@ export const runtime = 'edge';
 
 ---
 
+## Skill 7: Multi-Platform Embedding
+
+Bitcoin Agent can be embedded in any website regardless of tech stack.
+
+### 7.1 React / Next.js
+
+Drop-in React component with full customization.
+
+```tsx
+import { BitcoinAgent } from '@bitcoin-agent/react';
+
+export default function Page() {
+  return (
+    <BitcoinAgent 
+      apiKey="your-key"
+      theme="dark"
+      lang="en"
+      features={['chat', 'tip-jar', 'price-ticker']}
+    />
+  );
+}
+```
+
+**Props:**
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `apiKey` | `string` | required | Your Bitcoin Agent API key |
+| `theme` | `'dark' \| 'light'` | `'dark'` | Visual theme |
+| `lang` | `'en' \| 'es'` | `'en'` | Language |
+| `features` | `string[]` | `['chat']` | Enabled features |
+| `position` | `'inline' \| 'bottom-right' \| 'bottom-left'` | `'inline'` | Widget placement |
+| `onTipSent` | `(amount: number) => void` | — | Callback on successful tip |
+
+### 7.2 Web Component (Vanilla JS / Any Framework)
+
+Zero dependencies — works with plain HTML, Vue, Svelte, WordPress, etc.
+
+**Include the script:**
+```html
+<script src="https://cdn.bitcoinagent.ai/v2/bitcoin-agent.js"></script>
+```
+
+**Use the custom element:**
+```html
+<bitcoin-agent 
+  api-key="your-key"
+  theme="dark"
+  lang="es"
+  position="bottom-right"
+/>
+```
+
+**Attributes:**
+| Attribute | Values | Description |
+|-----------|--------|-------------|
+| `api-key` | string | Your API key |
+| `theme` | `dark`, `light` | Visual theme |
+| `lang` | `en`, `es` | Language |
+| `position` | `inline`, `bottom-right`, `bottom-left` | Placement mode |
+| `features` | comma-separated | e.g. `"chat,tip-jar,price-ticker"` |
+
+**JavaScript API:**
+```javascript
+const agent = document.querySelector('bitcoin-agent');
+
+// Listen for events
+agent.addEventListener('tip-sent', (e) => {
+  console.log(`User sent ${e.detail.amount} sats`);
+});
+
+// Programmatic control
+agent.open();
+agent.close();
+agent.setLang('es');
+```
+
+### 7.3 iframe Embed (Universal)
+
+Works everywhere — Notion, WordPress, Squarespace, static HTML.
+
+```html
+<iframe 
+  src="https://embed.bitcoinagent.ai/?key=YOUR_KEY&theme=dark&lang=en"
+  width="100%" 
+  height="600" 
+  frameborder="0"
+  allow="clipboard-write"
+/>
+```
+
+**Query Parameters:**
+| Param | Values | Description |
+|-------|--------|-------------|
+| `key` | string | Your API key |
+| `theme` | `dark`, `light` | Visual theme |
+| `lang` | `en`, `es` | Language |
+| `features` | comma-separated | Enabled features |
+| `minimal` | `true`, `false` | Compact mode (chat only) |
+
+### 7.4 Theming & Customization
+
+All embed methods support CSS custom properties for deep theming:
+
+```css
+bitcoin-agent,
+.bitcoin-agent-embed {
+  --ba-bg: #0a0a0a;
+  --ba-text: #e2e8f0;
+  --ba-accent: #F7931A;        /* Bitcoin orange */
+  --ba-accent-hover: #e8851a;
+  --ba-border: #1e293b;
+  --ba-radius: 16px;
+  --ba-font-mono: 'JetBrains Mono', monospace;
+  --ba-font-sans: 'Inter', sans-serif;
+}
+```
+
+### 7.5 Feature Flags
+
+Enable only what you need:
+
+| Feature | Description |
+|---------|-------------|
+| `chat` | AI-powered Bitcoin Q&A |
+| `tip-jar` | Lightning Network tipping |
+| `price-ticker` | Live BTC/USD price |
+| `protocol-layers` | Interactive Bitcoin layer visualization |
+| `markets` | Network metrics dashboard |
+
+**Example — chat-only widget:**
+```html
+<bitcoin-agent 
+  api-key="your-key"
+  features="chat"
+  position="bottom-right"
+  theme="dark"
+/>
+```
+
+---
+
 ## Quick Reference: Project Commands
 
 ```bash
@@ -493,5 +634,5 @@ npm start            # Start production server
 
 ---
 
-*Built with ⚡ by VisionaryAI.lat + Kimi K2.5*
+*Built with ⚡ by ScubaPav × Hidemai × Kimi K2.5 — VisionaryAI.lat*
 *Don't trust, verify. Then build.* 🛠️

@@ -3,12 +3,10 @@
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { Locale } from '@/types';
 import { NetworkNodes } from './NetworkNodes';
-import { ProtocolLayers } from '../protocol-layers/ProtocolLayers';
 import { HiddenMenu } from '../navigation/HiddenMenu';
 import {
   ArrowRight,
   Terminal,
-  Sparkles,
   ChevronDown,
   Bitcoin
 } from 'lucide-react';
@@ -177,15 +175,6 @@ export function HeroSection({ lang, dict }: HeroSectionProps) {
             <Terminal className="w-5 h-5" />
             <span>{dict.secondaryCta || (lang === 'en' ? './view-market-data' : './ver-datos-mercado')}</span>
           </motion.button>
-        </motion.div>
-
-        {/* Protocol Layers - SIN gradiente overlay que causa fade */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8 }}
-        >
-          <ProtocolLayers lang={lang} />
         </motion.div>
       </motion.div>
 
