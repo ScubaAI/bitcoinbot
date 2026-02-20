@@ -14,7 +14,6 @@ import crypto from 'crypto';
 // ============================================================================
 
 async function safeRedis<T>(operation: () => Promise<T>, fallback: T): Promise<T> {
-  // Check if we are in build mode or missing credentials
   const isNoOp = !process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN;
 
   if (isNoOp) {
@@ -81,18 +80,23 @@ function isChallengeZone(request: NextRequest): boolean {
     '/challenge/bypass',
     '/api/challenge/verify',
     '/api/challenge/bypass',
-    '/api/satoshi/immune', // Allow dashboard APIs to load
+    '/api/satoshi/immune',
   ];
   return zones.some(route => path === route || path.startsWith(`${route}/`));
 }
 
 function isStaticAsset(path: string): boolean {
-  return (
+  // FIX: Mejor detección de archivos estáticos
+  if (
     path.startsWith('/_next/') ||
     path.startsWith('/static/') ||
-    path.includes('/api/health') ||
-    /\.(ico|png|jpg|jpeg|svg|webp|gif|css|js|wasm|map|json)$/.test(path)
-  );
+    path.includes('/api/health')
+  ) {
+    return true;
+  }
+
+  // FIX: Regex más amplia para favicon y otros assets
+  return /\.(ico|png|jpg|jpeg|svg|webp|gif|css|js|wasm|map|json|txt|xml|webmanifest)$/i.test(path);
 }
 
 // ============================================================================
@@ -103,12 +107,17 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
   const path = request.nextUrl.pathname;
   const ip = request.ip || request.headers.get('x-forwarded-for') || 'unknown';
 
-  // 1. Skip checks for challenge zone and static assets
+  // FIX: Early return para favicon.ico específicamente
+  if (path === '/favicon.ico' || path.endsWith('.ico')) {
+    return NextResponse.next();
+  }
+
+  // Skip checks for challenge zone and static assets
   if (isChallengeZone(request) || isStaticAsset(path)) {
     return NextResponse.next();
   }
 
-  // 2. Check Banlist (Safe)
+  // Check Banlist (Safe)
   const banInfo = await safeRedis<string | null>(() => redis.get(`btc:banlist:${ip}`), null);
   if (banInfo) {
     return new NextResponse(
@@ -117,13 +126,12 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
     );
   }
 
-  // 3. Threat Analysis
+  // Threat Analysis
   let threatScore = 0;
   const matchedFactors: string[] = [];
   const url = request.nextUrl.toString();
   const userAgent = request.headers.get('user-agent') || '';
 
-  // Parse body safely (once)
   let body = '';
   if (['POST', 'PUT', 'PATCH'].includes(request.method)) {
     try {
@@ -138,14 +146,13 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
     }
   }
 
-  // 4. Immune Response
+  // Immune Response
   if (threatScore >= CONFIG.threatDetection.blockThreshold) {
     await safeRedis(() => redis.setex(`btc:banlist:${ip}`, 3600, 'Byzantine actor'), null);
     return new NextResponse(JSON.stringify({ error: 'Banned' }), { status: 403 });
   }
 
   if (threatScore >= CONFIG.threatDetection.challengeThreshold) {
-    // Verified check
     const isVerified = request.cookies.has('btc-pow-verified') ||
       await safeRedis(() => redis.get(`btc:immune:verified:${ip}`), null);
 
@@ -157,7 +164,7 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
     }
   }
 
-  // 5. Rate Limiting (Safe) - ATOMIC using setex
+  // Rate Limiting (Safe) - ATOMIC using setex
   let tier: keyof ImmuneConfig['tiers'] = 'public';
   if (path.startsWith('/api/satoshi/') || path.startsWith('/satoshi/')) {
     tier = 'satoshi';
@@ -169,16 +176,13 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
 
   const limitKey = `btc:ratelimit:${ip}:${tier}:${Math.floor(Date.now() / 60000)}`;
 
-  // Use get -> setex/incr pattern with better error handling (NO expire!)
   let currentReqs = await safeRedis<string | number | null>(() => redis.get(limitKey), 0);
   const count = typeof currentReqs === 'string' ? parseInt(currentReqs) : (typeof currentReqs === 'number' ? currentReqs : 0);
 
   if (count === 0) {
-    // First request: set with expiry atomically using setex
     await safeRedis(() => redis.setex(limitKey, 60, '1'), null);
     currentReqs = 1;
   } else {
-    // Increment existing
     const newCount = await safeRedis(() => redis.incr(limitKey), count + 1);
     currentReqs = typeof newCount === 'number' ? newCount : count + 1;
   }
@@ -187,31 +191,30 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
     return new NextResponse(JSON.stringify({ error: 'Rate limit' }), { status: 429 });
   }
 
-  // 6. Audit Log (Safe/Background)
+  // Audit Log (Safe/Background)
   if (threatScore > 0) {
     safeRedis(() => redis.lpush('btc:immune:audit', JSON.stringify({
       ip, path, score: threatScore, factors: matchedFactors, timestamp: Date.now()
     })), null);
   }
 
-  // 7. Success
+  // Success
   const response = NextResponse.next();
   response.headers.set('X-Immune-Status', 'active');
   response.headers.set('X-Threat-Score', threatScore.toFixed(2));
   return response;
 }
 
+// FIX: Matcher simplificado y más permisivo
 export const config = {
   matcher: [
     /*
-     * Match all request paths except:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - /api/health (health checks)
-     * - /challenge/* (challenge zone - handled internally)
-     * - Static file extensions
+     * Match all paths EXCEPT:
+     * - _next/* (Next.js internals)
+     * - static/* (static files)
+     * - *.ico, *.png, *.jpg, etc (assets)
+     * - api/health (health checks)
      */
-    '/((?!_next/static|_next/image|favicon.ico|api/health|challenge|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|js|css|wasm|map|json)$).*)',
+    '/((?!_next|static|.*\\.(?:ico|png|jpg|jpeg|svg|webp|gif|css|js|wasm|map|json|txt|xml)|api/health).*)',
   ],
 };
