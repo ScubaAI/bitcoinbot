@@ -68,7 +68,7 @@ const layers: Layer[] = [
     esName: 'Lightning (L2)',
     icon: Zap,
     color: 'text-blue-500',
-    bgColor: 'bg-blue-500/10 border-blue-500/20 group-hover:border-blue-500/40',
+    bgColor: 'bg-blue-500/10 border-blue-500/20 group-hover:border-orange-500/40',
     description: {
       en: 'Instant payments at scale. A layer ON TOP of Bitcoin for fast, cheap transactions.',
       es: 'Pagos instantáneos a escala. Una capa ENCIMA de Bitcoin para transacciones rápidas y baratas.'
@@ -94,7 +94,7 @@ const layers: Layer[] = [
     esName: 'Aplicaciones (L3)',
     icon: Globe,
     color: 'text-purple-500',
-    bgColor: 'bg-purple-500/10 border-purple-500/20 group-hover:border-purple-500/40',
+    bgColor: 'bg-purple-500/10 border-purple-500/20 group-hover:border-orange-500/40',
     description: {
       en: 'Applications built on top. Wallets, services, and protocols that make Bitcoin useful.',
       es: 'Aplicaciones construidas encima. Wallets, servicios y protocolos que hacen útil a Bitcoin.'
@@ -148,125 +148,114 @@ export function ProtocolLayers({ lang = 'en' }: ProtocolLayersProps) {
   }[lang];
 
   return (
-    <div className="w-full max-w-4xl mx-auto">
+    <div className="w-full max-w-5xl mx-auto px-6 py-20">
       {/* Header educativo */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-center mb-8"
+        className="text-center mb-12"
       >
-        <div className="inline-flex items-center gap-2 px-4 py-2 bg-slate-800/50 rounded-full border border-slate-700 mb-4">
-          <Layers className="w-4 h-4 text-orange-500" />
-          <span className="text-sm font-mono text-slate-300">{t.title}</span>
+        <div className="inline-flex items-center gap-3 px-6 py-3 bg-slate-900/80 backdrop-blur-2xl rounded-3xl border border-slate-700 mb-6">
+          <Layers className="w-5 h-5 text-[#f7931a]" />
+          <span className="text-lg font-mono tracking-widest text-slate-200">{t.title}</span>
         </div>
-        <p className="text-slate-400 max-w-2xl mx-auto">{t.subtitle}</p>
+        <p className="text-2xl text-slate-400 max-w-3xl mx-auto leading-relaxed">{t.subtitle}</p>
       </motion.div>
 
       {/* Mensaje educativo destacado sobre Lightning */}
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="mb-6 p-4 bg-blue-500/10 border border-blue-500/30 rounded-xl flex items-start gap-3"
+        className="mb-12 p-8 bg-gradient-to-br from-blue-950/80 to-slate-900 border border-blue-500/30 rounded-3xl flex items-start gap-5 backdrop-blur-xl"
       >
-        <Sparkles className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
-        <p className="text-sm text-blue-300">
-          {t.tip}
-        </p>
+        <Sparkles className="w-6 h-6 text-blue-400 flex-shrink-0 mt-1" />
+        <p className="text-lg text-blue-200 leading-relaxed">{t.tip}</p>
       </motion.div>
 
-      {/* Visualización de capas como edificio */}
-      <div className="relative bg-slate-900/80 backdrop-blur rounded-2xl border border-slate-800 p-6 md:p-8 overflow-hidden">
-
-        {/* Fondo de rejilla */}
-        <div className="absolute inset-0 opacity-10">
+      {/* Visualización de capas como edificio elegante */}
+      <div className="relative bg-slate-950/70 backdrop-blur-3xl rounded-3xl border border-slate-800 p-12 overflow-hidden">
+        {/* Fondo de rejilla sutil */}
+        <div className="absolute inset-0 opacity-10 pointer-events-none">
           <div className="w-full h-full" style={{
             backgroundImage: `radial-gradient(circle at 1px 1px, #f7931a 1px, transparent 0)`,
-            backgroundSize: '40px 40px'
+            backgroundSize: '44px 44px'
           }} />
         </div>
 
-        {/* Capas visuales tipo edificio */}
-        <div className="relative z-10 space-y-4">
+        {/* Capas visuales tipo torre */}
+        <div className="relative z-10 space-y-10">
           {layers.map((layer, index) => {
             const Icon = layer.icon;
             const isExpanded = expandedLayer === layer.id;
-            const isLightning = layer.id === 'l2'; // Especial atención a Lightning
+            const isLightning = layer.id === 'l2';
 
             return (
               <motion.div
                 key={layer.id}
-                initial={{ opacity: 0, x: -20 }}
+                initial={{ opacity: 0, x: -30 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.15 }}
+                transition={{ delay: index * 0.12 }}
                 className="relative"
               >
-                {/* Línea conectora */}
+                {/* Línea conectora elegante */}
                 {index < layers.length - 1 && (
-                  <div className="absolute left-8 -bottom-4 w-px h-4 bg-gradient-to-b from-orange-500/30 to-transparent" />
+                  <div className="absolute left-[52px] -bottom-6 w-px h-10 bg-gradient-to-b from-[#f7931a]/40 via-[#f7931a]/20 to-transparent" />
                 )}
 
                 {/* Tarjeta de capa */}
                 <motion.div
-                  whileHover={{ scale: 1.02, x: 5 }}
+                  whileHover={{ scale: 1.015, y: -4 }}
                   onClick={() => setExpandedLayer(isExpanded ? null : layer.id)}
                   className={`
-                    group relative p-5 rounded-xl border-2 transition-all cursor-pointer
-                    ${layer.bgColor}
-                    ${isLightning ? 'ring-2 ring-blue-500/50 shadow-lg shadow-blue-500/20' : ''}
+                    group relative p-10 rounded-3xl border-2 transition-all cursor-pointer shadow-2xl
+                    ${layer.bgColor} ${isLightning ? 'ring-2 ring-offset-4 ring-offset-slate-950 ring-blue-500/40 shadow-blue-500/10' : ''}
                   `}
                 >
-                  {/* Badge "Built on Bitcoin" para Lightning */}
                   {isLightning && (
-                    <div className="absolute -top-3 -right-3 px-3 py-1 bg-blue-500 text-white text-xs font-mono rounded-full shadow-lg flex items-center gap-1 z-20">
-                      <Bitcoin className="w-3 h-3" />
-                      <span>Built on Bitcoin</span>
+                    <div className="absolute -top-4 -right-4 px-6 py-2 bg-gradient-to-r from-blue-600 to-[#f7931a] text-white text-sm font-mono rounded-2xl shadow-xl flex items-center gap-2 z-20">
+                      <Bitcoin className="w-4 h-4" />
+                      Built on Bitcoin
                     </div>
                   )}
 
-                  <div className="flex items-start gap-4">
-                    {/* Icono */}
+                  <div className="flex items-start gap-8">
+                    {/* Icono grande */}
                     <div className={`
-                      p-3 rounded-xl bg-slate-800 border-2 transition-all
-                      ${isLightning ? 'border-blue-500/50' : 'border-slate-700 group-hover:border-orange-500/30'}
+                      p-6 rounded-2xl bg-slate-900 border-2 transition-all flex-shrink-0
+                      ${isLightning ? 'border-blue-500/60' : 'border-slate-700 group-hover:border-[#f7931a]/40'}
                     `}>
-                      <Icon className={`w-6 h-6 ${layer.color}`} />
+                      <Icon className={`w-10 h-10 ${layer.color}`} />
                     </div>
 
-                    {/* Contenido principal */}
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between mb-2">
-                        <h3 className={`text-xl font-bold font-mono flex items-center gap-2 ${layer.color}`}>
+                    {/* Contenido */}
+                    <div className="flex-1 pt-1">
+                      <div className="flex items-center justify-between mb-6">
+                        <h3 className={`text-3xl font-bold font-mono tracking-tight flex items-center gap-3 ${layer.color}`}>
                           {lang === 'es' ? layer.esName : layer.name}
-                          {isLightning && (
-                            <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full">
-                              L2
-                            </span>
-                          )}
+                          {isLightning && <span className="text-xs bg-blue-500/20 text-blue-400 px-3 py-1 rounded-full tracking-widest">L2</span>}
                         </h3>
 
-                        {/* Indicador de expansión */}
                         <motion.div
                           animate={{ rotate: isExpanded ? 180 : 0 }}
-                          className="text-slate-500"
+                          transition={{ duration: 0.4 }}
+                          className="text-slate-400 group-hover:text-[#f7931a]"
                         >
-                          <ArrowDown className="w-4 h-4" />
+                          <ArrowDown className="w-6 h-6" />
                         </motion.div>
                       </div>
 
-                      {/* Descripción */}
-                      <p className="text-slate-300 text-sm mb-3">
+                      <p className="text-xl text-slate-300 leading-relaxed mb-6">
                         {layer.description[lang]}
                       </p>
 
-                      {/* Analogía (siempre visible) */}
-                      <div className="text-xs text-slate-500 italic flex items-start gap-2 mb-2">
-                        <span className="text-slate-600">💡</span>
+                      <div className="text-base text-slate-400 italic flex items-start gap-4 mb-8">
+                        <span className="text-2xl opacity-60">💡</span>
                         <span>{layer.analogy[lang]}</span>
                       </div>
 
-                      {/* Features (visibles siempre en versión simplificada) */}
-                      <div className="flex flex-wrap gap-2 mt-3">
-                        {layer.features.slice(0, 3).map((feature) => (
+                      {/* Features chips */}
+                      <div className="flex flex-wrap gap-3">
+                        {layer.features.map((feature) => (
                           <div
                             key={feature.name}
                             className="relative"
@@ -274,27 +263,26 @@ export function ProtocolLayers({ lang = 'en' }: ProtocolLayersProps) {
                             onMouseLeave={() => setHoveredFeature(null)}
                           >
                             <span className={`
-                              text-xs px-2 py-1 rounded-full border font-mono transition-all cursor-help
+                              text-sm px-5 py-2.5 rounded-2xl border font-mono transition-all cursor-help
                               ${hoveredFeature === feature.name
-                                ? 'bg-slate-700 border-slate-500 text-white'
-                                : 'bg-slate-900 border-slate-700 text-slate-500'
+                                ? 'bg-slate-700 border-[#f7931a] text-white shadow-lg shadow-[#f7931a]/20'
+                                : 'bg-slate-900 border-slate-700 text-slate-400 hover:border-slate-500'
                               }
                             `}>
                               {feature.name}
-                              <HelpCircle className="inline w-3 h-3 ml-1 opacity-50" />
+                              <HelpCircle className="inline w-3.5 h-3.5 ml-2 opacity-60" />
                             </span>
 
-                            {/* Tooltip */}
                             <AnimatePresence>
                               {hoveredFeature === feature.name && (
                                 <motion.div
-                                  initial={{ opacity: 0, y: 10 }}
+                                  initial={{ opacity: 0, y: 12 }}
                                   animate={{ opacity: 1, y: 0 }}
-                                  exit={{ opacity: 0, y: 10 }}
-                                  className="absolute z-30 bottom-full left-0 mb-2 w-48 p-2 bg-slate-800 border border-slate-600 rounded-lg text-xs text-slate-300 shadow-xl"
+                                  exit={{ opacity: 0, y: 12 }}
+                                  className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-3 w-72 p-5 bg-slate-900 border border-slate-600 rounded-2xl text-sm text-slate-300 shadow-2xl"
                                 >
                                   {feature.tooltip}
-                                  <div className="absolute -bottom-1 left-4 w-2 h-2 bg-slate-800 border-r border-b border-slate-600 rotate-45" />
+                                  <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-3 h-3 bg-slate-900 border-r border-b border-slate-600 rotate-45" />
                                 </motion.div>
                               )}
                             </AnimatePresence>
@@ -311,32 +299,32 @@ export function ProtocolLayers({ lang = 'en' }: ProtocolLayersProps) {
                             exit={{ opacity: 0, height: 0 }}
                             className="overflow-hidden"
                           >
-                            <div className="mt-4 pt-4 border-t border-slate-700">
+                            <div className="mt-10 pt-10 border-t border-slate-700">
                               {/* Stats grid */}
-                              <div className="grid grid-cols-3 gap-3 mb-4">
+                              <div className="grid grid-cols-3 gap-6 mb-10">
                                 {layer.stats?.map((stat) => (
-                                  <div key={stat.label} className="text-center p-2 bg-slate-800/50 rounded-lg">
-                                    <div className="text-xs text-slate-500 mb-1">{stat.label}</div>
-                                    <div className="text-sm font-mono text-orange-400">{stat.value}</div>
+                                  <div key={stat.label} className="text-center p-6 bg-slate-900/60 rounded-2xl border border-slate-700">
+                                    <div className="text-xs uppercase tracking-widest text-slate-500 mb-2">{stat.label}</div>
+                                    <div className="text-3xl font-mono text-[#f7931a] font-semibold">{stat.value}</div>
                                   </div>
                                 ))}
                               </div>
 
-                              {/* Todas las features con tooltips */}
-                              <div className="space-y-2">
-                                <h4 className="text-xs font-mono text-slate-500 mb-2">All Features:</h4>
+                              {/* All features */}
+                              <div className="space-y-4">
+                                <h4 className="text-sm font-mono text-slate-400 mb-4 tracking-widest">ALL FEATURES</h4>
                                 {layer.features.map((feature) => (
-                                  <div key={feature.name} className="text-xs text-slate-400 flex items-start gap-2">
-                                    <span className="text-orange-500">→</span>
-                                    <span className="font-mono">{feature.name}:</span>
+                                  <div key={feature.name} className="text-sm text-slate-400 flex items-start gap-4">
+                                    <span className="text-[#f7931a] mt-1">→</span>
+                                    <span className="font-mono text-slate-300">{feature.name}:</span>
                                     <span className="text-slate-500">{feature.tooltip}</span>
                                   </div>
                                 ))}
                               </div>
 
-                              {/* Nota educativa específica */}
-                              <div className="mt-4 p-3 bg-slate-800/50 rounded-lg border border-slate-700">
-                                <p className="text-xs text-slate-400">
+                              {/* Nota educativa */}
+                              <div className="mt-10 p-6 bg-slate-900/50 border-l-4 border-[#f7931a] rounded-r-2xl">
+                                <p className="text-sm text-slate-400">
                                   {layer.id === 'l1' && t.l1Note}
                                   {layer.id === 'l2' && t.l2Note}
                                   {layer.id === 'l3' && t.l3Note}
@@ -354,26 +342,24 @@ export function ProtocolLayers({ lang = 'en' }: ProtocolLayersProps) {
           })}
         </div>
 
-        {/* Footer educativo */}
+        {/* Footer elegante */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1 }}
-          className="mt-6 pt-4 border-t border-slate-800 flex items-center justify-between text-xs text-slate-600"
+          className="mt-16 pt-8 border-t border-slate-800 flex items-center justify-center gap-12 text-sm text-slate-500 font-mono"
         >
-          <div className="flex items-center gap-2">
-            <Database className="w-3 h-3" />
-            <span>Base Layer</span>
+          <div className="flex items-center gap-3">
+            <div className="w-2 h-2 bg-orange-500 rounded-full" />
+            BASE LAYER
           </div>
-          <div className="w-6 h-px bg-gradient-to-r from-transparent via-orange-500/30 to-transparent" />
-          <div className="flex items-center gap-2">
-            <Zap className="w-3 h-3 text-blue-500" />
-            <span className="text-blue-400/70">Lightning Network</span>
+          <div className="flex items-center gap-3">
+            <div className="w-2 h-2 bg-blue-500 rounded-full" />
+            LIGHTNING NETWORK
           </div>
-          <div className="w-6 h-px bg-gradient-to-r from-transparent via-purple-500/30 to-transparent" />
-          <div className="flex items-center gap-2">
-            <Globe className="w-3 h-3" />
-            <span>Applications</span>
+          <div className="flex items-center gap-3">
+            <div className="w-2 h-2 bg-purple-500 rounded-full" />
+            APPLICATIONS
           </div>
         </motion.div>
 
@@ -381,10 +367,10 @@ export function ProtocolLayers({ lang = 'en' }: ProtocolLayersProps) {
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 1.2 }}
-          className="text-center text-xs text-slate-700 mt-4 font-mono"
+          transition={{ delay: 1.3 }}
+          className="text-center mt-8 text-sm text-slate-600 font-mono tracking-widest"
         >
-          ⚡ All layers work together. Lightning doesn't replace Bitcoin — it extends it. ⚡
+          ⚡ All layers work together. Lightning extends Bitcoin — it never replaces it. ⚡
         </motion.p>
       </div>
     </div>
