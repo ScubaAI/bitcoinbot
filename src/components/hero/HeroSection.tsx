@@ -174,7 +174,7 @@ export function HeroSection({ lang, dict }: HeroSectionProps) {
                 : 'Una infraestructura descentralizada para transferir valor a través de internet. Abierta, sin permisos y siempre funcionando—como el email, pero para dinero.'}
               <span className="absolute -inset-1 bg-orange-500/5 blur-xl rounded-full" />
             </span>
-          </m.p>
+          </motion.p>
         </motion.div>
 
         {/* Stats glassmorphic premium con animación al hover */}

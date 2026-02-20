@@ -141,7 +141,7 @@ const items: Item[] = [
   },
 ];
 
-export function HybridCarousel({ lang = 'en' }: { lang?: 'en' | 'es' }) {
+export function CircularEconomiesCarousel({ lang = 'en' }: { lang?: 'en' | 'es' }) {
   const [current, setCurrent] = useState(0);
   const [direction, setDirection] = useState(0);
   const [filter, setFilter] = useState<'all' | 'economy' | 'sponsor'>('all');
@@ -279,8 +279,8 @@ export function HybridCarousel({ lang = 'en' }: { lang?: 'en' | 'es' }) {
                     setCurrent(0);
                   }}
                   className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl text-sm font-mono transition-all border ${filter === tab.value
-                      ? 'bg-orange-500 text-black border-orange-400 shadow-lg shadow-orange-500/30'
-                      : 'bg-slate-900/60 text-slate-400 border-slate-700 hover:bg-slate-800'
+                    ? 'bg-orange-500 text-black border-orange-400 shadow-lg shadow-orange-500/30'
+                    : 'bg-slate-900/60 text-slate-400 border-slate-700 hover:bg-slate-800'
                     }`}
                 >
                   <Icon className="w-4 h-4" />
@@ -474,8 +474,8 @@ export function HybridCarousel({ lang = 'en' }: { lang?: 'en' | 'es' }) {
                     setCurrent(idx);
                   }}
                   className={`relative transition-all duration-300 ${idx === current
-                      ? 'w-8 h-3 bg-orange-500 rounded-full shadow-lg shadow-orange-500/70'
-                      : 'w-3 h-3 bg-slate-700 rounded-full hover:bg-slate-500'
+                    ? 'w-8 h-3 bg-orange-500 rounded-full shadow-lg shadow-orange-500/70'
+                    : 'w-3 h-3 bg-slate-700 rounded-full hover:bg-slate-500'
                     }`}
                   aria-label={`Go to item ${idx + 1}`}
                 />
