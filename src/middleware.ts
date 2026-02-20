@@ -112,6 +112,11 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
     return NextResponse.next();
   }
 
+  // 1. Root redirect (Fixes "missing root layout" build error)
+  if (path === '/') {
+    return NextResponse.redirect(new URL('/en', request.url));
+  }
+
   // Skip checks for challenge zone and static assets
   if (isChallengeZone(request) || isStaticAsset(path)) {
     return NextResponse.next();
