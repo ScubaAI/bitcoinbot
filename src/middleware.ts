@@ -157,7 +157,7 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
     }
   }
 
-  // 5. Rate Limiting (Safe)
+  // 5. Rate Limiting (Safe) - ATOMIC using setex
   let tier: keyof ImmuneConfig['tiers'] = 'public';
   if (path.startsWith('/api/satoshi/') || path.startsWith('/satoshi/')) {
     tier = 'satoshi';
@@ -168,8 +168,20 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
   }
 
   const limitKey = `btc:ratelimit:${ip}:${tier}:${Math.floor(Date.now() / 60000)}`;
-  const currentReqs = await safeRedis(() => redis.incr(limitKey), 1);
-  if (currentReqs === 1) await safeRedis(() => redis.expire(limitKey, 60), null);
+
+  // Use get -> setex/incr pattern with better error handling (NO expire!)
+  let currentReqs = await safeRedis<string | number | null>(() => redis.get(limitKey), 0);
+  const count = typeof currentReqs === 'string' ? parseInt(currentReqs) : (typeof currentReqs === 'number' ? currentReqs : 0);
+
+  if (count === 0) {
+    // First request: set with expiry atomically using setex
+    await safeRedis(() => redis.setex(limitKey, 60, '1'), null);
+    currentReqs = 1;
+  } else {
+    // Increment existing
+    const newCount = await safeRedis(() => redis.incr(limitKey), count + 1);
+    currentReqs = typeof newCount === 'number' ? newCount : count + 1;
+  }
 
   if (currentReqs > CONFIG.tiers[tier].requests) {
     return new NextResponse(JSON.stringify({ error: 'Rate limit' }), { status: 429 });
@@ -191,6 +203,15 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    /*
+     * Match all request paths except:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - /api/health (health checks)
+     * - /challenge/* (challenge zone - handled internally)
+     * - Static file extensions
+     */
+    '/((?!_next/static|_next/image|favicon.ico|api/health|challenge|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|js|css|wasm|map|json)$).*)',
   ],
 };

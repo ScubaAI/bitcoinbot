@@ -3,6 +3,7 @@ import { JetBrains_Mono, Inter } from 'next/font/google';
 import '../globals.css';
 import { Locale } from '@/lib/i18n/config';
 import { getDictionary } from '@/lib/i18n/config';
+import { Providers } from './providers';
 
 const jetbrainsMono = JetBrains_Mono({
   subsets: ['latin'],
@@ -16,16 +17,19 @@ const inter = Inter({
   display: 'swap',
 });
 
-export async function generateMetadata({ 
-  params: { lang } 
-}: { 
-  params: { lang: Locale } 
+export const dynamic = 'force-dynamic';
+
+export async function generateMetadata({
+  params
+}: {
+  params: { lang: Locale }
 }): Promise<Metadata> {
+  const lang = params?.lang || 'en';
   const dict = await getDictionary(lang);
-  
+
   return {
     title: 'Bitcoin Agent | Infrastructure First',
-    description: dict.hero.subtitle,
+    description: dict?.hero?.subtitle || 'Digital Immune System',
     keywords: [
       'Bitcoin',
       'Lightning Network',
@@ -56,14 +60,17 @@ export default async function RootLayout({
   children: React.ReactNode;
   params: { lang: Locale };
 }) {
-  const dict = await getDictionary(params.lang);
-  
+  const lang = params?.lang || 'en';
+
   return (
-    <html lang={params.lang} className="dark">
+    <html lang={lang} className="dark" suppressHydrationWarning>
       <body
         className={`${jetbrainsMono.variable} ${inter.variable} font-mono bg-terminal-black text-terminal-green antialiased`}
+        suppressHydrationWarning
       >
-        {children}
+        <Providers>
+          {children}
+        </Providers>
       </body>
     </html>
   );

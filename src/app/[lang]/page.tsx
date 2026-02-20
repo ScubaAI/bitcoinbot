@@ -6,8 +6,23 @@ import { TipJar } from '@/components/tip-jar/TipJar';
 import { Footer } from '@/components/footer/Footer';
 import { getDictionary } from '@/lib/i18n/config';
 
-export default async function Home({ params: { lang } }: { params: { lang: 'en' | 'es' } }) {
-  const dict = await getDictionary(lang);
+export const dynamic = 'force-dynamic';
+
+export default async function Home({ params }: { params: { lang: 'en' | 'es' } }) {
+  const lang = params?.lang || 'en';
+
+  let dict;
+  try {
+    dict = await getDictionary(lang);
+  } catch (e) {
+    console.error('Dictionary load failed:', e);
+    dict = {
+      hero: { title: 'Bitcoin Agent', subtitle: 'Digital Immune System' },
+      chat: { placeholder: 'Ask anything...' },
+      tip: { title: 'Support the Network' },
+      footer: { rights: 'All rights reserved' }
+    };
+  }
 
   return (
     <main>

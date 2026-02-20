@@ -1,28 +1,59 @@
 /**
- * Beacon Library (Client-Side)
+ * Beacon Library (Client-Side Only)
  * Powered by bitcoinjs-lib and mempool.space
  * 
  * Philosophy: Sovereignty starts in the browser. 
  * No private keys ever leave the client.
  */
 
-import * as bitcoin from 'bitcoinjs-lib';
-import { ECPairFactory, ECPairInterface } from 'ecpair';
-import * as tinysecp from 'tiny-secp256k1';
+// Types only - no imports at top level
+type BitcoinLib = typeof import('bitcoinjs-lib');
+type ECPairType = typeof import('ecpair');
+type TinySecpType = typeof import('tiny-secp256k1');
 
-const ECPair = ECPairFactory(tinysecp);
+// Module cache
+let modules: {
+    bitcoin: BitcoinLib;
+    ECPair: any;
+} | null = null;
 
 /**
- * Ensures Coinbin logic is ready (can be expanded for lazy loading)
+ * Loads Bitcoin modules dynamically (client-side only)
+ */
+async function loadModules() {
+    if (typeof window === 'undefined') {
+        throw new Error('Bitcoin modules can only be loaded in browser');
+    }
+
+    if (modules) return modules;
+
+    // Dynamic imports to avoid SSR issues
+    const [bitcoin, ecpair, tinysecp] = await Promise.all([
+        import('bitcoinjs-lib'),
+        import('ecpair'),
+        import('tiny-secp256k1'),
+    ]);
+
+    const ECPair = ecpair.ECPairFactory(tinysecp);
+
+    modules = { bitcoin, ECPair };
+    return modules;
+}
+
+/**
+ * Ensures Coinbin logic is ready (client-side only)
  */
 export async function loadCoinbin() {
-    return Promise.resolve();
+    if (typeof window === 'undefined') return;
+    await loadModules();
 }
 
 /**
  * Generates a fresh Bitcoin wallet for beacon purposes
  */
-export function generateBeaconWallet() {
+export async function generateBeaconWallet() {
+    const { bitcoin, ECPair } = await loadModules();
+
     const keyPair = ECPair.makeRandom();
     const { address } = bitcoin.payments.p2pkh({ pubkey: keyPair.publicKey });
 
@@ -64,12 +95,13 @@ export async function fetchUtxos(address: string) {
 /**
  * Creates and signs a Bitcoin transaction with OP_RETURN
  */
-export function createBeaconTransaction(
+export async function createBeaconTransaction(
     wif: string,
     utxos: any[],
     message: string,
     feeRate: number = 10
 ) {
+    const { bitcoin, ECPair } = await loadModules();
     const network = bitcoin.networks.bitcoin;
     const keyPair = ECPair.fromWIF(wif, network);
     const psbt = new bitcoin.Psbt({ network });
@@ -98,7 +130,6 @@ export function createBeaconTransaction(
     });
 
     // Estimate size and fee
-    // (inputs * 148) + (outputs * 34) + 10 + op_return_data
     const txSize = 10 + (utxos.length * 148) + (2 * 34) + opReturnData.length;
     const fee = Math.ceil(txSize * feeRate);
     const change = totalValue - fee;
