@@ -13,7 +13,7 @@
   html {
     scroll-behavior: smooth;
   }
-  
+
   body {
     @apply bg-slate-950 text-slate-100 antialiased;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
@@ -26,11 +26,12 @@
 }
 
 @layer components {
-  /* Glassmorphism card base */
+
+  /* Glassmorphism card base - SIN backdrop-blur */
   .glass-card {
-    @apply bg-slate-900/60 backdrop-blur-xl border border-slate-700/80 rounded-3xl;
+    @apply bg-slate-900 border border-slate-700 rounded-3xl;
   }
-  
+
   .glass-card:hover {
     @apply border-orange-500/40 shadow-2xl shadow-orange-500/20;
   }
@@ -45,7 +46,7 @@
     content: '';
     @apply absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full transition-transform duration-700;
   }
-  
+
   .btn-shine:hover::after {
     @apply translate-x-full;
   }
@@ -55,28 +56,29 @@
     @apply bg-gradient-to-br from-orange-300 via-amber-300 to-white bg-clip-text text-transparent;
   }
 
-  /* Badge premium */
+  /* Badge premium - SIN backdrop-blur */
   .badge-premium {
-    @apply px-8 py-3 bg-slate-900/70 backdrop-blur-2xl border border-orange-500/40 rounded-2xl text-orange-400 text-sm font-mono tracking-[4px] uppercase flex items-center gap-3 shadow-2xl shadow-orange-500/10 hover:border-orange-500/60 hover:scale-105 transition-all duration-300;
+    @apply px-8 py-3 bg-slate-900 border border-orange-500/40 rounded-2xl text-orange-400 text-sm font-mono tracking-[4px] uppercase flex items-center gap-3 shadow-2xl shadow-orange-500/10 hover:border-orange-500/60 hover:scale-105 transition-all duration-300;
   }
 
-  /* Stats card */
+  /* Stats card - SIN backdrop-blur */
   .stat-card {
-    @apply glass-card p-6 text-center transition-all duration-300 hover:-translate-y-1;
+    @apply bg-slate-900 border border-slate-700 rounded-3xl p-6 text-center transition-all duration-300 hover:-translate-y-1;
   }
 }
 
 @layer utilities {
+
   /* Animación suave para todos los elementos interactivos */
   .interactive {
     @apply transition-all duration-300 ease-out;
   }
-  
-  /* Glow naranja */
+
+  /* Glow naranja - REDUCIDO para evitar efecto fade */
   .glow-orange {
-    box-shadow: 0 0 40px -10px rgba(249, 115, 22, 0.3);
+    box-shadow: 0 0 20px -5px rgba(249, 115, 22, 0.2);
   }
-  
+
   /* Text shadow para legibilidad sobre fondos oscuros */
   .text-shadow {
     text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);

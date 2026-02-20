@@ -13,9 +13,9 @@ interface TerminalWindowProps {
   title?: string;
 }
 
-export function TerminalWindow({ 
-  lines = [], 
-  isLoading, 
+export function TerminalWindow({
+  lines = [],
+  isLoading,
   children,
   className = '',
   title
@@ -23,7 +23,7 @@ export function TerminalWindow({
   const bottomRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
-  
+
   // Track si el usuario hizo scroll manual para no interrumpir lectura
   const userScrolledRef = useRef(false);
   const lastLineCountRef = useRef(lines.length);
@@ -70,21 +70,21 @@ export function TerminalWindow({
 
   const formatContent = (content: string) => {
     const parts = content.split(/(```[\s\S]*?```)/g);
-    
+
     return parts.map((part, index) => {
       if (part.startsWith('```') && part.endsWith('```')) {
         const code = part.slice(3, -3).trim();
         const firstLine = code.split('\n')[0];
         const language = firstLine && !firstLine.includes(' ') ? firstLine : 'text';
-        const actualCode = firstLine && !firstLine.includes(' ') 
-          ? code.slice(firstLine.length).trim() 
+        const actualCode = firstLine && !firstLine.includes(' ')
+          ? code.slice(firstLine.length).trim()
           : code;
 
         return (
           <div key={index} className="my-3 rounded bg-slate-950 border border-slate-800 overflow-hidden">
             <div className="flex items-center justify-between px-3 py-1.5 bg-slate-900 border-b border-slate-800">
               <span className="text-xs text-slate-500 font-mono">{language}</span>
-              <button 
+              <button
                 onClick={() => copyToClipboard(actualCode, `code-${index}`)}
                 className="text-xs text-slate-500 hover:text-orange-400 transition-colors flex items-center gap-1"
               >
@@ -101,15 +101,15 @@ export function TerminalWindow({
           </div>
         );
       }
-      
+
       return (
         <span key={index}>
-          {part.split(/(https?:\/\/[^\s]+)/g).map((segment, i) => 
+          {part.split(/(https?:\/\/[^\s]+)/g).map((segment, i) =>
             segment.match(/^https?:\/\//) ? (
-              <a 
-                key={i} 
-                href={segment} 
-                target="_blank" 
+              <a
+                key={i}
+                href={segment}
+                target="_blank"
                 rel="noopener noreferrer"
                 className="text-orange-400 hover:underline break-all"
               >
@@ -133,7 +133,7 @@ export function TerminalWindow({
           <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
           <div className="w-3 h-3 rounded-full bg-green-500/80" />
         </div>
-        
+
         <div className="flex-1 flex items-center justify-center gap-2">
           <Terminal className="w-4 h-4 text-slate-600" />
           <span className="text-xs text-slate-500 font-mono tracking-wider">
@@ -149,7 +149,7 @@ export function TerminalWindow({
       </div>
 
       {/* Content */}
-      <div 
+      <div
         ref={containerRef}
         className={`p-4 overflow-y-auto font-mono text-sm scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent scroll-smooth ${!title && lines.length > 0 ? 'h-[50vh] min-h-[300px] max-h-[600px]' : 'min-h-[200px]'}`}
         aria-live="polite"
@@ -175,15 +175,14 @@ export function TerminalWindow({
                 {line.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </span>
 
-              <div className={`${
-                line.type === 'input'
+              <div className={`${line.type === 'input'
                   ? 'text-orange-400'
                   : line.type === 'error'
-                  ? 'text-red-400'
-                  : line.type === 'system'
-                  ? 'text-yellow-500/60 italic'
-                  : 'text-slate-300'
-              }`}>
+                    ? 'text-red-400'
+                    : line.type === 'system'
+                      ? 'text-yellow-500/60 italic'
+                      : 'text-slate-300'
+                }`}>
                 {line.type === 'input' && (
                   <span className="text-orange-500/50 mr-2 select-none">{'➜'}</span>
                 )}
@@ -241,7 +240,7 @@ export function TerminalWindow({
 
         {/* Input area */}
         {children && (
-          <div className="mt-6 pt-4 border-t border-slate-800/50 sticky bottom-0 bg-slate-900/95 backdrop-blur">
+          <div className="mt-6 pt-4 border-t border-slate-800 sticky bottom-0 bg-slate-900">
             {children}
           </div>
         )}

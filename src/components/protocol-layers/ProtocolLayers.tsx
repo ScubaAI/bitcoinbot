@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { Database, Zap, Globe, Lock, Layers, ArrowDown, Bitcoin, Network, Sparkles, HelpCircle } from 'lucide-react';
+import { Database, Zap, Globe, Layers, ArrowDown, Bitcoin, Sparkles, HelpCircle } from 'lucide-react';
 import { useState } from 'react';
 
 interface ProtocolLayersProps {
@@ -148,14 +148,14 @@ export function ProtocolLayers({ lang = 'en' }: ProtocolLayersProps) {
   }[lang];
 
   return (
-    <div className="w-full max-w-5xl mx-auto px-6 py-20">
+    <div className="w-full max-w-5xl mx-auto px-6 py-20 bg-slate-950">
       {/* Header educativo */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         className="text-center mb-12"
       >
-        <div className="inline-flex items-center gap-3 px-6 py-3 bg-slate-900/80 backdrop-blur-2xl rounded-3xl border border-slate-700 mb-6">
+        <div className="inline-flex items-center gap-3 px-6 py-3 bg-slate-900 rounded-3xl border border-slate-700 mb-6">
           <Layers className="w-5 h-5 text-[#f7931a]" />
           <span className="text-lg font-mono tracking-widest text-slate-200">{t.title}</span>
         </div>
@@ -166,14 +166,14 @@ export function ProtocolLayers({ lang = 'en' }: ProtocolLayersProps) {
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="mb-12 p-8 bg-gradient-to-br from-blue-950/80 to-slate-900 border border-blue-500/30 rounded-3xl flex items-start gap-5 backdrop-blur-xl"
+        className="mb-12 p-8 bg-gradient-to-br from-blue-950/80 to-slate-900 border border-blue-500/30 rounded-3xl flex items-start gap-5"
       >
         <Sparkles className="w-6 h-6 text-blue-400 flex-shrink-0 mt-1" />
         <p className="text-lg text-blue-200 leading-relaxed">{t.tip}</p>
       </motion.div>
 
       {/* Visualización de capas como edificio elegante */}
-      <div className="relative bg-slate-950/70 backdrop-blur-3xl rounded-3xl border border-slate-800 p-12 overflow-hidden">
+      <div className="relative bg-slate-900 rounded-3xl border border-slate-800 p-12">
         {/* Fondo de rejilla sutil */}
         <div className="absolute inset-0 opacity-10 pointer-events-none">
           <div className="w-full h-full" style={{
@@ -208,7 +208,7 @@ export function ProtocolLayers({ lang = 'en' }: ProtocolLayersProps) {
                   onClick={() => setExpandedLayer(isExpanded ? null : layer.id)}
                   className={`
                     group relative p-10 rounded-3xl border-2 transition-all cursor-pointer shadow-2xl
-                    ${layer.bgColor} ${isLightning ? 'ring-2 ring-offset-4 ring-offset-slate-950 ring-blue-500/40 shadow-blue-500/10' : ''}
+                    ${layer.bgColor} ${isLightning ? 'ring-2 ring-offset-4 ring-offset-slate-900 ring-blue-500/40 shadow-blue-500/10' : ''}
                   `}
                 >
                   {isLightning && (

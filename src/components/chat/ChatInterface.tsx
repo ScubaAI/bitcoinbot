@@ -5,7 +5,7 @@ import { useState, useRef, useEffect, FormEvent, useCallback, useMemo } from 're
 import { motion } from 'framer-motion';
 import { TerminalWindow } from '../terminal/TerminalWindow';
 import { Locale, Message, TerminalLine } from '@/types';
-import { Send, Zap, Bitcoin } from 'lucide-react';
+import { Send, Zap } from 'lucide-react';
 
 interface ChatInterfaceProps {
   lang: Locale;
@@ -188,15 +188,9 @@ export function ChatInterface({ lang, dict }: ChatInterfaceProps) {
   return (
     <section
       id="chat-section"
-      className="relative min-h-screen bg-gradient-to-b from-slate-950 via-slate-950 to-black py-24 px-4 md:px-6 overflow-hidden scroll-mt-20"
+      className="relative py-24 px-4 md:px-6 bg-black scroll-mt-20"
     >
-      {/* Subtle background glow */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_30%,rgba(247,147,26,0.08)_0%,transparent_60%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_70%,rgba(245,158,11,0.05)_0%,transparent_70%)]" />
-      </div>
-
-      <div className="relative max-w-5xl mx-auto">
+      <div className="max-w-5xl mx-auto">
         {/* Header invitador */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -205,12 +199,12 @@ export function ChatInterface({ lang, dict }: ChatInterfaceProps) {
           transition={{ duration: 0.8 }}
           className="text-center mb-12"
         >
-          <div className="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-[#f7931a]/20 to-amber-500/10 border border-[#f7931a]/30 rounded-3xl mb-6">
-            <Zap className="w-6 h-6 text-[#f7931a] animate-pulse" />
+          <div className="inline-flex items-center gap-3 px-6 py-3 bg-slate-900 border border-[#f7931a]/30 rounded-3xl mb-6">
+            <Zap className="w-6 h-6 text-[#f7931a]" />
             <span className="text-lg font-mono text-[#f7931a] tracking-wider">Bitcoin Agent Online</span>
           </div>
 
-          <h2 className="text-5xl md:text-6xl font-bold bg-gradient-to-br from-white via-[#f7931a] to-amber-300 bg-clip-text text-transparent font-mono tracking-[-1px] mb-4">
+          <h2 className="text-5xl md:text-6xl font-bold text-white font-mono tracking-[-1px] mb-4">
             Talk to Bitcoin Agent
           </h2>
 
@@ -229,7 +223,7 @@ export function ChatInterface({ lang, dict }: ChatInterfaceProps) {
           transition={{ duration: 0.9, delay: 0.2 }}
         >
           <TerminalWindow lines={terminalLines} isLoading={isLoading}>
-            <form onSubmit={handleSubmit} className="flex items-center gap-3 bg-slate-900/60 backdrop-blur-xl border-t border-slate-800/70 pt-5">
+            <form onSubmit={handleSubmit} className="flex items-center gap-3 bg-slate-900 border-t border-slate-800 pt-5">
               <span className="text-[#f7931a] font-mono text-xl font-bold">{'>'}</span>
 
               <input
@@ -248,10 +242,10 @@ export function ChatInterface({ lang, dict }: ChatInterfaceProps) {
                 disabled={isLoading || !input.trim()}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="px-6 py-3 bg-gradient-to-r from-[#f7931a] to-amber-500 hover:from-[#f7931a]/90 hover:to-amber-400 text-black font-mono font-bold rounded-2xl shadow-lg shadow-[#f7931a]/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2"
+                className="px-6 py-3 bg-[#f7931a] hover:bg-[#f7931a]/90 text-black font-mono font-bold rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2"
               >
                 {isLoading ? (
-                  <span className="animate-pulse">Thinking...</span>
+                  <span>Thinking...</span>
                 ) : (
                   <>
                     Send
