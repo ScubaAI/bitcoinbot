@@ -37,9 +37,9 @@ export default function NativeBeaconPage() {
     }, []);
 
     // Generar wallet
-    const createWallet = () => {
+    const createWallet = async () => {
         try {
-            const w = generateBeaconWallet();
+            const w = await generateBeaconWallet();
             setWallet(w);
             checkBalance(w.address);
         } catch (e) {
@@ -76,7 +76,7 @@ export default function NativeBeaconPage() {
             }
 
             const beaconMessage = formatBeaconMessage(blockHeight, message);
-            const transaction = createBeaconTransaction(
+            const transaction = await createBeaconTransaction(
                 wallet.wif,
                 utxos,
                 beaconMessage,
