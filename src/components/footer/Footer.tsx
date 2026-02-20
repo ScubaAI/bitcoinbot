@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion';
 import { Locale } from '@/lib/i18n/types';
 import { TranslationKeys } from '@/lib/i18n/types';
+import fallbackDict from '@/lib/i18n/en.json';
 import {
   BookOpen,
   Globe,
@@ -21,12 +22,8 @@ interface FooterProps {
   dict?: TranslationKeys['footer'];
 }
 
-const defaultDict = {
-  // ... tu fallback original ...
-};
-
 export function Footer({ lang, dict }: FooterProps) {
-  const t = dict || defaultDict[lang];
+  const t = dict || fallbackDict.footer;
 
   const resources = [
     { title: t.protocol, href: 'https://bitcoin.org/bitcoin.pdf', icon: BookOpen, desc: 'Satoshi Nakamoto' },

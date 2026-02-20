@@ -5,19 +5,20 @@ import { ChatInterface } from '@/components/chat/ChatInterface';
 import { TipJar } from '@/components/tip-jar/TipJar';
 import { Footer } from '@/components/footer/Footer';
 import { getDictionary } from '@/lib/i18n/config';
+import type { TranslationKeys } from '@/lib/i18n/types';
+import fallbackDict from '@/lib/i18n/en.json';
 
 export const dynamic = 'force-dynamic';
 
 export default async function Home({ params }: { params: { lang: 'en' | 'es' } }) {
   const lang = params?.lang || 'en';
 
-  let dict;
+  let dict: TranslationKeys;
   try {
     dict = await getDictionary(lang);
   } catch (e) {
     console.error('Dictionary load failed:', e);
-    // fallback dict (ya lo tienes bien)
-    dict = { /* ... tu fallback ... */ };
+    dict = fallbackDict;
   }
 
   return (
