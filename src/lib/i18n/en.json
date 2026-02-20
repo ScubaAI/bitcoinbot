@@ -6,7 +6,7 @@
     "secondaryCta": "View Market Data",
     "stats": {
       "nodes": "Verified Nodes",
-      "uptime": "Uptime", 
+      "uptime": "Uptime",
       "countries": "Countries"
     },
     "infrastructure": {
@@ -61,7 +61,7 @@
     "powered": "Powered by Lightning Network",
     "preset": {
       "1k": "1,000 sats",
-      "5k": "5,000 sats", 
+      "5k": "5,000 sats",
       "21k": "21,000 sats",
       "100k": "100,000 sats"
     }
@@ -69,6 +69,10 @@
   "footer": {
     "resources": "Essential Reading",
     "documentation": "Developer Docs",
+    "system": "System",
+    "dashboard": "Immune Dashboard",
+    "beacon": "Native Beacon",
+    "challenge": "Challenge Zone",
     "protocol": "Bitcoin Whitepaper",
     "lightning": "Lightning Paper",
     "books": "Security Guide",

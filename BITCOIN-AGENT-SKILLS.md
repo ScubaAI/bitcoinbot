@@ -9,7 +9,7 @@ Master Bitcoin infrastructure development with TypeScript. This skill set covers
 **"Bitcoin as Infrastructure > Bitcoin as Asset"**
 
 - Verify, don't trust
-- Cypherpunk ethos: privacy, decentralization, open source
+- Cypherpunk ethos: privacy, decentralization, open sourcegigit
 - Infrastructure-first mindset (not price speculation)
 - Evolutive: respects whitepaper roots but embraces innovation
 

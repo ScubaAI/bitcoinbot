@@ -55,6 +55,10 @@ export default async function Home({ params }: { params: { lang: 'en' | 'es' } }
       footer: {
         resources: "Reading",
         documentation: "Docs",
+        system: "System",
+        dashboard: "Dashboard",
+        beacon: "Beacon",
+        challenge: "Challenge",
         protocol: "Whitepaper",
         lightning: "Lightning Paper",
         books: "Security Guide",

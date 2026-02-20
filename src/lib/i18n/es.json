@@ -69,6 +69,10 @@
   "footer": {
     "resources": "Lectura Esencial",
     "documentation": "Docs para Desarrolladores",
+    "system": "Sistema",
+    "dashboard": "Panel Inmune",
+    "beacon": "Beacon Nativo",
+    "challenge": "Zona de Desafíos",
     "protocol": "Whitepaper de Bitcoin",
     "lightning": "Paper de Lightning",
     "books": "Guía de Seguridad",
