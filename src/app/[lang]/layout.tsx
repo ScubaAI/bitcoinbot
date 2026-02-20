@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { Locale, getDictionary } from '@/lib/i18n/config';
 import { Providers } from './providers';
-import HiddenMenu from '@/components/navigation/HiddenMenu';
+import { HiddenMenu } from '@/components/navigation/HiddenMenu';
 
 export const dynamic = 'force-dynamic';
 
