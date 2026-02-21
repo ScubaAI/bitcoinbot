@@ -1,6 +1,10 @@
 import en from './en.json';
 
-export type TranslationKeys = typeof en;
+export type TranslationKeys = typeof en & {
+  markets?: {
+    networkHealth?: string;
+  };
+};
 export type Locale = 'en' | 'es';
 
 // Helper type for nested keys
