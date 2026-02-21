@@ -42,7 +42,7 @@ export function HiddenMenu({ lang }: { lang: 'en' | 'es' }) {
 
     const handleAdminClick = (path: string) => {
         if (isAdmin) {
-            router.push(`/${lang}${path}`);
+            router.push(path);
             setIsOpen(false);
         } else {
             setShowPasswordModal(true);
@@ -55,7 +55,7 @@ export function HiddenMenu({ lang }: { lang: 'en' | 'es' }) {
             setIsAdmin(true);
             setShowPasswordModal(false);
             setPassword('');
-            router.push(`/${lang}/satoshi/immune-dashboard`);
+            router.push('/satoshi/immune-dashboard');
             setIsOpen(false);
         } else {
             alert(lang === 'en' ? 'Access denied… try again.' : 'Acceso denegado… inténtalo de nuevo.');
