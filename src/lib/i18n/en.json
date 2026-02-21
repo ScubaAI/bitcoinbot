@@ -44,7 +44,10 @@
       "24h": "24H",
       "7d": "7D",
       "30d": "30D"
-    }
+    },
+    "ath": "All-Time High",
+    "fromATH": "from ATH",
+    "supply": "Supply"
   },
   "chat": {
     "placeholder": "Ask me about Bitcoin protocol, Lightning, or mining...",

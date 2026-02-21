@@ -7,32 +7,34 @@ type Timeframes = {
   '30d': string;
 };
 
-// Tipo completo para markets (sin opcionales)
+// Tipo completo para markets - COINCIDE CON TUS JSON
 type MarketsTranslation = {
   title: string;
   subtitle: string;
-  disclaimer: string;
   price: string;
   marketCap: string;
-  volume: string;
-  dominance: string;
-  hashrate: string;
+  hashRate: string;        // ← mayúscula R, no hashrate
+  networkHealth: string;
+  change24h: string;       // ← agregado
+  volume: string;          // ← agregado
+  dominance: string;       // ← agregado
+  source: string;          // ← agregado
+  timeframes: Timeframes;
+  disclaimer?: string;
+  hashrate?: string;
   supply: string;
   ath: string;
   fromATH: string;
-  source: string;
-  timeframes: Timeframes;
-  networkHealth: string;
 };
 
-// Tipo principal - ahora markets es requerido
+// Tipo principal
 export type TranslationKeys = typeof en & {
   markets: MarketsTranslation;
 };
 
 export type Locale = 'en' | 'es';
 
-// Helper type para traducciones parciales (si las necesitas)
+// Helper type
 export type DeepPartial<T> = {
   [P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P];
 };
