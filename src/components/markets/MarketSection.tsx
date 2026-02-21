@@ -15,6 +15,7 @@ import {
   Minus,
   Info
 } from 'lucide-react';
+import { useTranslation } from './useTranslation';
 
 interface MarketData {
   price: number;
@@ -121,38 +122,7 @@ export function MarketSection({ lang }: MarketSectionProps) {
     );
   }
 
-  const t = {
-    en: {
-      title: "Markets",
-      subtitle: "Real-time network metrics",
-      disclaimer: "Market data reflects adoption, not purpose.",
-      price: "BTC/USD",
-      marketCap: "Market Cap",
-      volume: "24h Volume",
-      dominance: "Dominance",
-      hashrate: "Hash Rate",
-      supply: "Supply",
-      ath: "All-Time High",
-      fromATH: "from ATH",
-      source: "CoinGecko",
-      timeframes: { '24h': '24H', '7d': '7D', '30d': '30D' },
-    },
-    es: {
-      title: "Mercados",
-      subtitle: "Métricas de red en tiempo real",
-      disclaimer: "Los datos reflejan adopción, no propósito.",
-      price: "BTC/USD",
-      marketCap: "Cap. Mercado",
-      volume: "Volumen 24h",
-      dominance: "Dominancia",
-      hashrate: "Hash Rate",
-      supply: "Suministro",
-      ath: "Máximo Histórico",
-      fromATH: "desde ATH",
-      source: "CoinGecko",
-      timeframes: { '24h': '24H', '7d': '7D', '30d': '30D' },
-    }
-  }[lang];
+  const t = useTranslation(lang).markets;
 
   const getChangeColor = (change: number) => {
     if (change > 0) return 'text-green-400 bg-green-500/10 border-green-500/30';
