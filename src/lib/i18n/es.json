@@ -36,7 +36,15 @@
     "marketCap": "Capitalización",
     "hashRate": "Hash Rate",
     "networkHealth": "Salud de la Red",
-    "change24h": "Cambio 24h"
+    "change24h": "Cambio 24h",
+    "volume": "Volumen 24h",
+    "dominance": "Dominancia",
+    "source": "CoinGecko",
+    "timeframes": {
+      "24h": "24H",
+      "7d": "7D",
+      "30d": "30D"
+    }
   },
   "chat": {
     "placeholder": "Pregúntame sobre el protocolo Bitcoin, Lightning, o minería...",

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { motion, useMotionValue, useSpring } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   TrendingUp,
   TrendingDown,
@@ -15,7 +15,10 @@ import {
   Minus,
   Info
 } from 'lucide-react';
-import { useTranslation } from './useTranslation';
+import en from '@/lib/i18n/en.json';
+import es from '@/lib/i18n/es.json';
+
+const translations = { en, es };
 
 interface MarketData {
   price: number;
@@ -40,43 +43,12 @@ interface MarketSectionProps {
   lang: 'en' | 'es';
 }
 
-// Counter component for animated numbers - SIMPLIFICADO
-function AnimatedNumber({ value, prefix = '', suffix = '' }: { value: number; prefix?: string; suffix?: string }) {
-  const [displayValue, setDisplayValue] = useState(0);
-  
-  useEffect(() => {
-    // Animación simple sin framer-motion spring (mejor performance en mobile)
-    const duration = 1000;
-    const steps = 30;
-    const increment = value / steps;
-    let current = 0;
-    
-    const timer = setInterval(() => {
-      current += increment;
-      if (current >= value) {
-        setDisplayValue(value);
-        clearInterval(timer);
-      } else {
-        setDisplayValue(current);
-      }
-    }, duration / steps);
-    
-    return () => clearInterval(timer);
-  }, [value]);
-
-  return (
-    <span className="break-all">
-      {prefix}
-      {displayValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-      {suffix}
-    </span>
-  );
-}
-
 export function MarketSection({ lang }: MarketSectionProps) {
   const [data, setData] = useState<MarketData | null>(null);
   const [loading, setLoading] = useState(true);
   const [timeframe, setTimeframe] = useState<'24h' | '7d' | '30d'>('24h');
+
+  const t = translations[lang].markets;
 
   useEffect(() => {
     Promise.all([
@@ -122,8 +94,6 @@ export function MarketSection({ lang }: MarketSectionProps) {
     );
   }
 
-  const t = useTranslation(lang).markets;
-
   const getChangeColor = (change: number) => {
     if (change > 0) return 'text-green-400 bg-green-500/10 border-green-500/30';
     if (change < 0) return 'text-red-400 bg-red-500/10 border-red-500/30';
@@ -144,7 +114,6 @@ export function MarketSection({ lang }: MarketSectionProps) {
 
   return (
     <section id="markets-section" className="py-16 sm:py-20 bg-slate-950 border-t border-slate-800/70 relative overflow-hidden">
-      {/* Background sutil */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_30%,rgba(249,115,22,0.05)_0%,transparent_60%)]" />
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 relative z-10">
@@ -190,7 +159,6 @@ export function MarketSection({ lang }: MarketSectionProps) {
           className="mb-6 sm:mb-8 p-4 sm:p-8 bg-slate-900 border border-slate-800 rounded-2xl sm:rounded-3xl"
         >
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-            {/* Precio - FIX: Tamaños responsive y break-all */}
             <div className="min-w-0">
               <div className="flex items-center gap-2 text-slate-500 mb-2">
                 <CircleDollarSign className="w-4 h-4" />
@@ -209,10 +177,9 @@ export function MarketSection({ lang }: MarketSectionProps) {
               </div>
             </div>
 
-            {/* ATH - FIX: Grid responsive */}
             <div className="grid grid-cols-2 gap-3 sm:gap-4 min-w-[140px] sm:min-w-[200px]">
               <div className="text-left sm:text-right">
-                <div className="text-xs text-slate-500 font-mono mb-0.5">ATH</div>
+                <div className="text-xs text-slate-500 font-mono mb-0.5">{t.ath}</div>
                 <div className="text-lg sm:text-2xl font-bold text-white break-all">
                   ${data?.ath.toLocaleString()}
                 </div>
@@ -233,7 +200,7 @@ export function MarketSection({ lang }: MarketSectionProps) {
           </div>
         </motion.div>
 
-        {/* Metrics Grid - FIX: 1 col en mobile, 2 en tablet, 3 en desktop */}
+        {/* Metrics Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
           <MetricCard
             title={t.marketCap}
@@ -254,7 +221,7 @@ export function MarketSection({ lang }: MarketSectionProps) {
             icon={Shield}
           />
           <MetricCard
-            title={t.hashrate}
+            title={t.hashRate}
             value={`${data?.hashrate || 850} EH/s`}
             subvalue="Network security"
             icon={Hash}
@@ -293,7 +260,7 @@ export function MarketSection({ lang }: MarketSectionProps) {
             <Info className="w-4 h-4 sm:w-5 sm:h-5 text-orange-500/70 flex-shrink-0 mt-0.5" />
             <div>
               <p className="text-sm sm:text-base text-slate-300 leading-relaxed">
-                {t.disclaimer}
+                {t.subtitle}
               </p>
               <p className="text-xs font-mono text-slate-600 mt-2 tracking-wider">
                 {t.source}
@@ -306,7 +273,6 @@ export function MarketSection({ lang }: MarketSectionProps) {
   );
 }
 
-// MetricCard simplificado y responsive
 interface MetricCardProps {
   title: string;
   value: string;

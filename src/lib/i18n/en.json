@@ -36,7 +36,15 @@
     "marketCap": "Market Cap",
     "hashRate": "Hash Rate",
     "networkHealth": "Network Health",
-    "change24h": "24h Change"
+    "change24h": "24h Change",
+    "volume": "24h Volume",
+    "dominance": "Dominance",
+    "source": "CoinGecko",
+    "timeframes": {
+      "24h": "24H",
+      "7d": "7D",
+      "30d": "30D"
+    }
   },
   "chat": {
     "placeholder": "Ask me about Bitcoin protocol, Lightning, or mining...",
