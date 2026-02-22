@@ -1,414 +1,303 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { redis } from '@/lib/redis';
 
 // ============================================================================
-// MOCK CONFIGURATION (Debe ir ANTES de importar el route)
+// Configuration
 // ============================================================================
 
-// Mock crypto.randomUUID
-const mockUUIDs = ['session-123', 'session-456', 'session-789'];
-let uuidIndex = 0;
-vi.stubGlobal('crypto', {
-  randomUUID: () => mockUUIDs[uuidIndex++] || `session-${Date.now()}`,
-});
-
-// Mock Date.now para tests determinísticos
-const MOCK_TIMESTAMP = 1700000000000;
-vi.spyOn(Date, 'now').mockReturnValue(MOCK_TIMESTAMP);
-
-// Mock Redis
-const mockRedis = {
-  setex: vi.fn(),
-  get: vi.fn(),
-  del: vi.fn(),
-  incr: vi.fn(),
-  expire: vi.fn(),
-  ttl: vi.fn(),
-};
-
-vi.mock('@/lib/redis', () => ({
-  redis: mockRedis,
-}));
-
-// Mock safeRedis del middleware
-const mockSafeRedis = vi.fn();
-vi.mock('@/middleware', () => ({
-  safeRedis: mockSafeRedis,
-}));
+const SESSION_DURATION = 3600; // 1 hour
+const MAX_ATTEMPTS = 5;
+const LOCKOUT_DURATION = 900; // 15 minutes
+const TIMING_DELAY_MS = 150; // Anti-timing attack delay
 
 // ============================================================================
-// IMPORTS (Después de los mocks)
+// Safe Redis Wrapper (Local)
 // ============================================================================
 
-import { POST, GET, DELETE } from './route';
-
-// ============================================================================
-// HELPERS
-// ============================================================================
-
-function createRequest(
-  method: string,
-  body?: object,
-  headers: Record<string, string> = {}
-): NextRequest {
-  const url = 'https://example.com/api/admin/auth';
-  
-  if (body) {
-    return new NextRequest(url, {
-      method,
-      headers: {
-        'content-type': 'application/json',
-        ...headers,
-      },
-      body: JSON.stringify(body),
-    });
-  }
-  
-  return new NextRequest(url, {
-    method,
-    headers,
-  });
-}
-
-function createRequestWithToken(token: string, method: string = 'GET'): NextRequest {
-  return new NextRequest('https://example.com/api/admin/auth', {
-    method,
-    headers: {
-      'X-Session-Token': token,
-    },
-  });
+async function safeRedis<T>(operation: () => Promise<T>, fallback: T): Promise<T> {
+    const isNoOp = !process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN;
+    
+    if (isNoOp) {
+        return fallback;
+    }
+    
+    try {
+        return await operation();
+    } catch (error) {
+        console.error('Redis error:', error);
+        return fallback;
+    }
 }
 
 // ============================================================================
-// TESTS
+// Helper Functions
 // ============================================================================
 
-describe('Admin Authentication Route', () => {
-  const VALID_API_KEY = 'API_KEY_TEST123456789012345678901234567890';
-  
-  beforeEach(() => {
-    vi.resetAllMocks();
-    uuidIndex = 0;
+/**
+ * Extracts client IP from request headers
+ */
+function extractClientIP(request: NextRequest): string {
+    // Check various headers for real IP
+    const forwarded = request.headers.get('x-forwarded-for');
+    if (forwarded) {
+        // Take the last IP in the chain (most reliable)
+        const ips = forwarded.split(',').map(ip => ip.trim());
+        return ips[ips.length - 1] || 'unknown';
+    }
     
-    // Default: rate limit permite requests
-    mockSafeRedis.mockResolvedValue({
-      allowed: true,
-      remaining: 5,
-      locked: false,
-    });
+    return request.headers.get('x-real-ip') 
+        || request.headers.get('cf-connecting-ip')
+        || 'unknown';
+}
+
+/**
+ * Validates API key format (basic check)
+ */
+function isValidApiKeyFormat(key: string): boolean {
+    // API keys should be alphanumeric with underscores, minimum 20 chars
+    return /^API_KEY_[A-Za-z0-9_]{15,}$/.test(key);
+}
+
+/**
+ * Constant-time comparison to prevent timing attacks
+ */
+function timingSafeEqual(a: string, b: string): boolean {
+    if (a.length !== b.length) return false;
     
-    // Default: Redis operations success
-    mockRedis.setex.mockResolvedValue('OK');
-    mockRedis.get.mockResolvedValue(null);
-    mockRedis.del.mockResolvedValue(1);
-    mockRedis.incr.mockResolvedValue(1);
-    mockRedis.expire.mockResolvedValue(1);
-    mockRedis.ttl.mockResolvedValue(3600);
+    let result = 0;
+    for (let i = 0; i < a.length; i++) {
+        result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+    }
+    return result === 0;
+}
+
+/**
+ * Adds a delay to normalize response times
+ */
+async function normalizeTiming(): Promise<void> {
+    await new Promise(resolve => setTimeout(resolve, TIMING_DELAY_MS));
+}
+
+// ============================================================================
+// POST /api/admin/auth - Authenticate with API Key
+// ============================================================================
+
+export async function POST(request: NextRequest) {
+    const ip = extractClientIP(request);
     
-    // Environment setup
-    process.env.ADMIN_API_KEY = VALID_API_KEY;
-  });
+    try {
+        // Check rate limiting
+        const rateLimitResult = await safeRedis(
+            async () => {
+                const key = `btc:auth:attempts:${ip}`;
+                const attempts = await redis.incr(key);
+                
+                if (attempts === 1) {
+                    await redis.expire(key, LOCKOUT_DURATION);
+                }
+                
+                if (attempts > MAX_ATTEMPTS) {
+                    const ttl = await redis.ttl(key);
+                    return { allowed: false, remaining: 0, locked: true, lockoutTtl: ttl };
+                }
+                
+                return { allowed: true, remaining: MAX_ATTEMPTS - attempts, locked: false };
+            },
+            { allowed: true, remaining: MAX_ATTEMPTS, locked: false }
+        );
+        
+        if (!rateLimitResult.allowed) {
+            await normalizeTiming();
+            
+            if (rateLimitResult.locked) {
+                return NextResponse.json(
+                    { error: 'Account temporarily locked', remaining: 0 },
+                    { 
+                        status: 423,
+                        headers: { 'Retry-After': String(rateLimitResult.lockoutTtl || LOCKOUT_DURATION) }
+                    }
+                );
+            }
+            
+            return NextResponse.json(
+                { error: 'Too many attempts', remaining: 0 },
+                { status: 429 }
+            );
+        }
+        
+        // Parse request body
+        const contentType = request.headers.get('content-type');
+        if (!contentType?.includes('application/json')) {
+            return NextResponse.json(
+                { error: 'Unsupported media type' },
+                { status: 415 }
+            );
+        }
+        
+        const body = await request.json();
+        const { key } = body;
+        
+        // Validate key presence
+        if (!key || typeof key !== 'string') {
+            await normalizeTiming();
+            return NextResponse.json(
+                { error: 'Authentication required', remaining: rateLimitResult.remaining - 1 },
+                { status: 401 }
+            );
+        }
+        
+        // Validate key format
+        if (!isValidApiKeyFormat(key)) {
+            await normalizeTiming();
+            return NextResponse.json(
+                { error: 'Authentication failed', remaining: rateLimitResult.remaining - 1 },
+                { status: 401 }
+            );
+        }
+        
+        // Get valid API key from environment
+        const validKey = process.env.ADMIN_API_KEY;
+        
+        if (!validKey) {
+            console.error('ADMIN_API_KEY not configured');
+            await normalizeTiming();
+            return NextResponse.json(
+                { error: 'Internal error' },
+                { status: 500 }
+            );
+        }
+        
+        // Timing-safe comparison
+        const isValid = timingSafeEqual(key, validKey);
+        
+        if (!isValid) {
+            await normalizeTiming();
+            return NextResponse.json(
+                { error: 'Authentication failed', remaining: rateLimitResult.remaining - 1 },
+                { status: 401 }
+            );
+        }
+        
+        // Reset rate limit on successful auth
+        await safeRedis(
+            async () => redis.del(`btc:auth:attempts:${ip}`),
+            null
+        );
+        
+        // Generate session token
+        const sessionToken = crypto.randomUUID();
+        const sessionData = {
+            ip,
+            createdAt: Date.now(),
+        };
+        
+        // Store session in Redis
+        await safeRedis(
+            async () => redis.setex(
+                `btc:auth:session:${sessionToken}`,
+                SESSION_DURATION,
+                JSON.stringify(sessionData)
+            ),
+            null
+        );
+        
+        await normalizeTiming();
+        
+        return NextResponse.json({
+            success: true,
+            token: sessionToken,
+            expiresIn: SESSION_DURATION,
+        });
+        
+    } catch (error) {
+        console.error('Auth error:', error);
+        await normalizeTiming();
+        return NextResponse.json(
+            { error: 'Internal error' },
+            { status: 500 }
+        );
+    }
+}
 
-  afterEach(() => {
-    vi.restoreAllMocks();
-  });
+// ============================================================================
+// GET /api/admin/auth - Verify Session
+// ============================================================================
 
-  // ==========================================================================
-  // POST /api/admin/auth - Authentication
-  // ==========================================================================
-  
-  describe('POST /api/admin/auth', () => {
-    it('should authenticate valid API key and return session token', async () => {
-      const request = createRequest('POST', { key: VALID_API_KEY });
+export async function GET(request: NextRequest) {
+    const token = request.headers.get('X-Session-Token');
+    
+    if (!token) {
+        return NextResponse.json(
+            { valid: false, error: 'No session token provided' },
+            { status: 401 }
+        );
+    }
+    
+    try {
+        const sessionKey = `btc:auth:session:${token}`;
+        const sessionData = await safeRedis<string | null>(
+            async () => redis.get(sessionKey),
+            null
+        );
+        
+        if (!sessionData) {
+            return NextResponse.json(
+                { valid: false, error: 'Session expired or invalid' },
+                { status: 401 }
+            );
+        }
+        
+        const session = JSON.parse(sessionData);
+        const ttl = await safeRedis(
+            async () => redis.ttl(sessionKey),
+            0
+        );
+        
+        // Extend session if about to expire (< 5 minutes)
+        if (ttl > 0 && ttl < 300) {
+            await safeRedis(
+                async () => redis.expire(sessionKey, SESSION_DURATION),
+                null
+            );
+        }
+        
+        return NextResponse.json({
+            valid: true,
+            expiresIn: ttl > 0 ? ttl : SESSION_DURATION,
+        });
+        
+    } catch (error) {
+        console.error('Session verification error:', error);
+        return NextResponse.json(
+            { valid: false, error: 'Internal error' },
+            { status: 500 }
+        );
+    }
+}
 
-      const response = await POST(request);
-      const data = await response.json();
+// ============================================================================
+// DELETE /api/admin/auth - Logout
+// ============================================================================
 
-      expect(response.status).toBe(200);
-      expect(data).toEqual({
-        success: true,
-        token: 'session-123',
-        expiresIn: 3600,
-      });
-      
-      // Verify Redis session was created
-      expect(mockRedis.setex).toHaveBeenCalledWith(
-        'btc:auth:session:session-123',
-        3600,
-        expect.any(String)
-      );
-      
-      // Verify audit log
-      expect(mockSafeRedis).toHaveBeenCalledWith(
-        expect.any(Function),
-        null
-      );
-    });
-
-    it('should reject invalid API key format', async () => {
-      const request = createRequest('POST', { key: 'invalid-key-format' });
-
-      const response = await POST(request);
-      const data = await response.json();
-
-      expect(response.status).toBe(401);
-      expect(data.error).toBe('Authentication failed');
-      expect(data.remaining).toBeDefined();
-    });
-
-    it('should reject wrong API key (timing-safe)', async () => {
-      const request = createRequest('POST', { 
-        key: 'API_KEY_WRONG123456789012345678901234567890' 
-      });
-
-      const response = await POST(request);
-      const data = await response.json();
-
-      expect(response.status).toBe(401);
-      expect(data.error).toBe('Authentication failed');
-    });
-
-    it('should reject missing key', async () => {
-      const request = createRequest('POST', {});
-
-      const response = await POST(request);
-      const data = await response.json();
-
-      expect(response.status).toBe(401);
-      expect(data.error).toBe('Authentication required');
-    });
-
-    it('should reject non-string key', async () => {
-      const request = createRequest('POST', { key: 12345 });
-
-      const response = await POST(request);
-      expect(response.status).toBe(401);
-    });
-
-    it('should reject invalid content-type', async () => {
-      const request = new NextRequest('https://example.com/api/admin/auth', {
-        method: 'POST',
-        headers: { 'content-type': 'text/plain' },
-        body: 'key=test',
-      });
-
-      const response = await POST(request);
-      expect(response.status).toBe(415);
-    });
-
-    it('should handle rate limiting (423 Locked)', async () => {
-      mockSafeRedis.mockResolvedValue({
-        allowed: false,
-        remaining: 0,
-        locked: true,
-        lockoutTtl: 900,
-      });
-
-      const request = createRequest('POST', { key: VALID_API_KEY });
-
-      const response = await POST(request);
-      const data = await response.json();
-
-      expect(response.status).toBe(423);
-      expect(data.error).toBe('Account temporarily locked');
-      expect(response.headers.get('Retry-After')).toBe('900');
-    });
-
-    it('should handle rate limiting (429 Too Many Requests)', async () => {
-      mockSafeRedis.mockResolvedValue({
-        allowed: false,
-        remaining: 0,
-        locked: false,
-      });
-
-      const request = createRequest('POST', { key: VALID_API_KEY });
-
-      const response = await POST(request);
-      const data = await response.json();
-
-      expect(response.status).toBe(429);
-      expect(data.error).toBe('Too many attempts');
-    });
-
-    it('should handle Redis failure gracefully', async () => {
-      mockRedis.setex.mockRejectedValue(new Error('Redis down'));
-
-      const request = createRequest('POST', { key: VALID_API_KEY });
-
-      const response = await POST(request);
-      const data = await response.json();
-
-      expect(response.status).toBe(500);
-      expect(data.error).toBe('Internal error');
-    });
-
-    it('should have constant response time regardless of result', async () => {
-      const startFast = Date.now();
-      await POST(createRequest('POST', { key: 'wrong' }));
-      const timeFast = Date.now() - startFast;
-
-      vi.spyOn(Date, 'now')
-        .mockReturnValueOnce(MOCK_TIMESTAMP)
-        .mockReturnValueOnce(MOCK_TIMESTAMP + 200); // Simular delay
-
-      const startSlow = Date.now();
-      await POST(createRequest('POST', { key: VALID_API_KEY }));
-      const timeSlow = Date.now() - startSlow;
-
-      // Ambas respuestas deben tardar ~150ms mínimo (timing protection)
-      expect(timeFast).toBeGreaterThanOrEqual(150);
-    });
-  });
-
-  // ==========================================================================
-  // GET /api/admin/auth - Verify Session
-  // ==========================================================================
-  
-  describe('GET /api/admin/auth', () => {
-    it('should verify valid session token', async () => {
-      const sessionData = {
-        ip: '127.0.0.1',
-        createdAt: MOCK_TIMESTAMP,
-      };
-      
-      mockRedis.get.mockResolvedValue(JSON.stringify(sessionData));
-
-      const request = createRequestWithToken('valid-token');
-      const response = await GET(request);
-      const data = await response.json();
-
-      expect(response.status).toBe(200);
-      expect(data.valid).toBe(true);
-      expect(data.expiresIn).toBeDefined();
-    });
-
-    it('should extend session if about to expire', async () => {
-      mockRedis.get.mockResolvedValue(JSON.stringify({ ip: '127.0.0.1', createdAt: MOCK_TIMESTAMP }));
-      mockRedis.ttl.mockResolvedValue(200); // Menos de 5 minutos
-
-      const request = createRequestWithToken('valid-token');
-      await GET(request);
-
-      expect(mockRedis.expire).toHaveBeenCalledWith('btc:auth:session:valid-token', 3600);
-    });
-
-    it('should reject missing token', async () => {
-      const request = new NextRequest('https://example.com/api/admin/auth', {
-        method: 'GET',
-      });
-
-      const response = await GET(request);
-      const data = await response.json();
-
-      expect(response.status).toBe(401);
-      expect(data.valid).toBe(false);
-    });
-
-    it('should reject invalid/expired token', async () => {
-      mockRedis.get.mockResolvedValue(null);
-
-      const request = createRequestWithToken('expired-token');
-      const response = await GET(request);
-      const data = await response.json();
-
-      expect(response.status).toBe(401);
-      expect(data.error).toBe('Session expired or invalid');
-    });
-
-    it('should handle Redis errors during verification', async () => {
-      mockRedis.get.mockRejectedValue(new Error('Redis error'));
-
-      const request = createRequestWithToken('valid-token');
-      const response = await GET(request);
-
-      expect(response.status).toBe(500);
-    });
-  });
-
-  // ==========================================================================
-  // DELETE /api/admin/auth - Logout
-  // ==========================================================================
-  
-  describe('DELETE /api/admin/auth', () => {
-    it('should destroy valid session', async () => {
-      mockRedis.get.mockResolvedValue(JSON.stringify({ ip: '127.0.0.1' }));
-
-      const request = createRequestWithToken('valid-token', 'DELETE');
-      const response = await DELETE(request);
-      const data = await response.json();
-
-      expect(response.status).toBe(200);
-      expect(data.success).toBe(true);
-      expect(mockRedis.del).toHaveBeenCalledWith('btc:auth:session:valid-token');
-    });
-
-    it('should handle missing token gracefully', async () => {
-      const request = new NextRequest('https://example.com/api/admin/auth', {
-        method: 'DELETE',
-      });
-
-      const response = await DELETE(request);
-      const data = await response.json();
-
-      expect(response.status).toBe(200); // Idempotente: success aunque no haya token
-      expect(data.success).toBe(true);
-    });
-
-    it('should handle Redis del failure', async () => {
-      mockRedis.del.mockResolvedValue(0); // No se eliminó nada
-
-      const request = createRequestWithToken('valid-token', 'DELETE');
-      const response = await DELETE(request);
-
-      // Debería ser 200 igual (idempotente) o 500 si queremos strict
-      expect(response.status).toBe(200);
-    });
-  });
-
-  // ==========================================================================
-  // Security Features
-  // ==========================================================================
-  
-  describe('Security Features', () => {
-    it('should not expose API key in error messages', async () => {
-      const request = createRequest('POST', { key: VALID_API_KEY });
-      
-      // Simular error de Redis que podría filtrar datos
-      mockRedis.setex.mockRejectedValue(new Error(`Connection failed: ${VALID_API_KEY}`));
-      
-      const response = await POST(request);
-      const data = await response.json();
-      
-      expect(data.error).toBe('Internal error');
-      expect(JSON.stringify(data)).not.toContain(VALID_API_KEY);
-    });
-
-    it('should validate API key format strictly', async () => {
-      const invalidFormats = [
-        'API_KEY_', // muy corto
-        'api_key_LOWERCASE123', // minúsculas
-        'API-KEY-WITH-DASHES123', // guiones
-        'API_KEY_123!', // caracteres especiales
-        '', // vacío
-      ];
-
-      for (const key of invalidFormats) {
-        const request = createRequest('POST', { key });
-        const response = await POST(request);
-        expect(response.status).toBe(401);
-      }
-    });
-
-    it('should extract IP correctly from various headers', async () => {
-      const testCases = [
-        { ip: '1.2.3.4', expected: '1.2.3.4' },
-        { forwarded: '1.1.1.1, 2.2.2.2, 3.3.3.3', expected: '3.3.3.3' }, // último
-        { forwarded: 'spoofed, real', expected: 'real' },
-        {}, // unknown
-      ];
-
-      // Nota: Esto requeriría exponer la función o testear indirectamente
-      // mediante los logs de auditoría
-    });
-  });
-});
+export async function DELETE(request: NextRequest) {
+    const token = request.headers.get('X-Session-Token');
+    
+    if (!token) {
+        // Idempotent: return success even without token
+        return NextResponse.json({ success: true });
+    }
+    
+    try {
+        await safeRedis(
+            async () => redis.del(`btc:auth:session:${token}`),
+            null
+        );
+        
+        return NextResponse.json({ success: true });
+        
+    } catch (error) {
+        console.error('Logout error:', error);
+        // Still return success for idempotency
+        return NextResponse.json({ success: true });
+    }
+}

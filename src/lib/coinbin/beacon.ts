@@ -1,4 +1,220 @@
 /**
+ * Coinbin Beacon Library
+ * Pure client-side Bitcoin signing and broadcasting
+ * 
+ * Compatible with: Legacy (1...) and SegWit Native (bc1...)
+ */
+
+import * as bitcoin from 'bitcoinjs-lib';
+import ECPairFactory from 'ecpair';
+import * as ecc from 'tiny-secp256k1';
+
+// Initialize ECPair with ECC library
+const ECPair = ECPairFactory(ecc);
+
+// Network configuration
+const network = bitcoin.networks.bitcoin;
+
+// ============================================================================
+// Interfaces
+// ============================================================================
+
+export interface UTXO {
+    txid: string;
+    vout: number;
+    value: number;
+    scriptPubKey: string;
+}
+
+export interface BeaconTransaction {
+    rawTx: string;
+    txid: string;
+    fee: number;
+    opReturn: string;
+}
+
+export interface BeaconWallet {
+    wif: string;
+    address: string;
+    publicKey: string;
+}
+
+// ============================================================================
+// Wallet Functions
+// ============================================================================
+
+/**
+ * Generates a new random beacon wallet
+ */
+export function generateBeaconWallet(): BeaconWallet {
+    const keyPair = ECPair.makeRandom({ network });
+    const wif = keyPair.toWIF();
+    
+    // Try SegWit first (bc1...)
+    const { address: segwitAddress } = bitcoin.payments.p2wpkh({ 
+        pubkey: Buffer.from(keyPair.publicKey), 
+        network 
+    });
+    
+    if (segwitAddress) {
+        return {
+            wif,
+            address: segwitAddress,
+            publicKey: Buffer.from(keyPair.publicKey).toString('hex'),
+        };
+    }
+    
+    // Fallback to Legacy (1...)
+    const { address: legacyAddress } = bitcoin.payments.p2pkh({ 
+        pubkey: Buffer.from(keyPair.publicKey), 
+        network 
+    });
+    
+    return {
+        wif,
+        address: legacyAddress!,
+        publicKey: Buffer.from(keyPair.publicKey).toString('hex'),
+    };
+}
+
+/**
+ * Loads a wallet from WIF
+ */
+export function loadWalletFromWif(wif: string): BeaconWallet {
+    const keyPair = ECPair.fromWIF(wif, network);
+    
+    // Try SegWit first
+    const { address: segwitAddress } = bitcoin.payments.p2wpkh({ 
+        pubkey: Buffer.from(keyPair.publicKey), 
+        network 
+    });
+    
+    if (segwitAddress) {
+        return {
+            wif,
+            address: segwitAddress,
+            publicKey: Buffer.from(keyPair.publicKey).toString('hex'),
+        };
+    }
+    
+    // Fallback to Legacy
+    const { address: legacyAddress } = bitcoin.payments.p2pkh({ 
+        pubkey: Buffer.from(keyPair.publicKey), 
+        network 
+    });
+    
+    return {
+        wif,
+        address: legacyAddress!,
+        publicKey: Buffer.from(keyPair.publicKey).toString('hex'),
+    };
+}
+
+// ============================================================================
+// Blockchain Functions
+// ============================================================================
+
+const MEMPOOL_API = 'https://mempool.space/api';
+
+/**
+ * Fetches UTXOs for an address
+ */
+export async function fetchUtxos(address: string): Promise<UTXO[]> {
+    try {
+        const response = await fetch(`${MEMPOOL_API}/address/${address}/utxo`);
+        
+        if (!response.ok) {
+            throw new Error(`Failed to fetch UTXOs: ${response.status}`);
+        }
+        
+        const utxos = await response.json();
+        
+        // Enrich with scriptPubKey
+        const enrichedUtxos = await Promise.all(
+            utxos.map(async (utxo: any) => {
+                try {
+                    const txResponse = await fetch(`${MEMPOOL_API}/tx/${utxo.txid}`);
+                    const txData = await txResponse.json();
+                    const vout = txData.vout[utxo.vout];
+                    
+                    return {
+                        txid: utxo.txid,
+                        vout: utxo.vout,
+                        value: utxo.value,
+                        scriptPubKey: vout.scriptpubkey,
+                    };
+                } catch {
+                    return null;
+                }
+            })
+        );
+        
+        return enrichedUtxos.filter((utxo): utxo is UTXO => utxo !== null);
+    } catch (error) {
+        console.error('Error fetching UTXOs:', error);
+        return [];
+    }
+}
+
+/**
+ * Fetches address balance
+ */
+export async function fetchBalance(address: string): Promise<number> {
+    try {
+        const response = await fetch(`${MEMPOOL_API}/address/${address}`);
+        
+        if (!response.ok) {
+            return 0;
+        }
+        
+        const data = await response.json();
+        return data.chain_stats?.funded_txo_sum - data.chain_stats?.spent_txo_sum || 0;
+    } catch (error) {
+        console.error('Error fetching balance:', error);
+        return 0;
+    }
+}
+
+/**
+ * Broadcasts a transaction
+ */
+export async function broadcastTransaction(rawTx: string): Promise<string> {
+    const response = await fetch(`${MEMPOOL_API}/tx`, {
+        method: 'POST',
+        body: rawTx,
+    });
+    
+    if (!response.ok) {
+        const error = await response.text();
+        throw new Error(`Broadcast failed: ${error}`);
+    }
+    
+    return response.text(); // Returns txid
+}
+
+/**
+ * Gets current block height
+ */
+export async function getBlockHeight(): Promise<number> {
+    try {
+        const response = await fetch(`${MEMPOOL_API}/blocks/tip/height`);
+        
+        if (!response.ok) {
+            return 0;
+        }
+        
+        return response.json();
+    } catch (error) {
+        console.error('Error fetching block height:', error);
+        return 0;
+    }
+}
+
+// ============================================================================
+// Transaction Building
+// ============================================================================
+
+/**
  * Construye y firma una transacción OP_RETURN.
  * COMPATIBLE CON: Legacy (1...) y SegWit Nativo (bc1...)
  */
@@ -15,13 +231,16 @@ export function buildAndSignBeacon(
     const totalValue = utxos.reduce((sum, u) => sum + u.value, 0);
 
     // 1. DETECCIÓN DE TIPO DE WALLET (LEGACY vs SEGWIT)
-    // Detectamos si la clave corresponde a una dirección bc1 (SegWit) o 1 (Legacy)
-    // Usamos payments para derivar la dirección y ver su tipo
-    const { output: p2wpkhOutput, address: possibleBc1 } = bitcoin.payments.p2wpkh({ pubkey: keyPair.publicKey, network });
-    const { output: p2pkhOutput, address: possibleLegacy } = bitcoin.payments.p2pkh({ pubkey: keyPair.publicKey, network });
+    const { address: possibleBc1 } = bitcoin.payments.p2wpkh({ 
+        pubkey: Buffer.from(keyPair.publicKey), 
+        network 
+    });
+    const { address: possibleLegacy } = bitcoin.payments.p2pkh({ 
+        pubkey: Buffer.from(keyPair.publicKey), 
+        network 
+    });
 
     // Verificamos si el scriptPubKey del UTXO coincide con SegWit o Legacy
-    // Nota: Asumimos que todos los UTXOs son del mismo tipo por simplicidad
     const isSegWit = utxos[0].scriptPubKey.startsWith('0014'); // '0014' es el prefijo estándar de P2WPKH
 
     // 2. AGREGAR INPUTS
@@ -38,21 +257,12 @@ export function buildAndSignBeacon(
             });
         } else {
             // INPUT LEGACY (1...)
-            // Para Legacy, necesitamos el script completo de la output anterior
             psbt.addInput({
                 hash: utxo.txid,
                 index: utxo.vout,
-                // Legacy requiere nonWitnessUtxo (la tx completa anterior) o, para simplificar en este caso,
-                // si solo tenemos el scriptPubKey, forzamos la firma de forma legacy simple.
-                // NOTA: Para producción con Legacy, se recomienda pasar la tx completa. 
-                // Aquí usamos un truco para firmar con witnessUtxo pero output P2PKH estándar si el backend lo soporta.
-                // Pero lo más seguro para Legacy puro es:
-                nonWitnessUtxo: Buffer.from('...'), // Omitimos por complejidad de fetching extra.
-                // SOLUCIÓN PRÁCTICA: Usamos witnessUtxo también para inputs legacy en PSBTs modernos si la wallet lo permite,
-                // pero para que funcione 100% con tu Electrum Legacy, lo haremos así:
                 witnessUtxo: {
-                     script: Buffer.from(utxo.scriptPubKey, 'hex'),
-                     value: BigInt(utxo.value)
+                    script: Buffer.from(utxo.scriptPubKey, 'hex'),
+                    value: BigInt(utxo.value)
                 }
             });
         }
@@ -69,8 +279,8 @@ export function buildAndSignBeacon(
 
     // 4. Cálculo de Fee
     const txSize = isSegWit 
-        ? 10 + (utxos.length * 68) + (2 * 31) + opReturnData.length // Estimación SegWit (más barata)
-        : 10 + (utxos.length * 148) + (2 * 34) + opReturnData.length; // Estimación Legacy
+        ? 10 + (utxos.length * 68) + (2 * 31) + opReturnData.length
+        : 10 + (utxos.length * 148) + (2 * 34) + opReturnData.length;
     
     const fee = Math.ceil(txSize * feeRate);
     const change = totalValue - fee;
@@ -80,7 +290,6 @@ export function buildAndSignBeacon(
     }
 
     // 5. OUTPUT DE CAMBIO (Devolver a la misma wallet)
-    // Detectamos automáticamente a qué dirección devolver el cambio
     const changeAddress = isSegWit ? possibleBc1 : possibleLegacy;
     
     psbt.addOutput({
@@ -100,4 +309,24 @@ export function buildAndSignBeacon(
         fee,
         opReturn: message
     };
+}
+
+// ============================================================================
+// Utility Functions
+// ============================================================================
+
+/**
+ * Formats a beacon message with timestamp
+ */
+export function formatBeaconMessage(message: string): string {
+    const timestamp = new Date().toISOString();
+    return `[${timestamp}] ${message}`;
+}
+
+/**
+ * Legacy function for compatibility - no-op since bitcoinjs-lib is always loaded
+ */
+export async function loadCoinbin(): Promise<void> {
+    // No-op - bitcoinjs-lib is bundled
+    return Promise.resolve();
 }

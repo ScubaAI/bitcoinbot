@@ -16,7 +16,7 @@ import { redis } from './lib/redis';
 // SAFE REDIS WRAPPER (Build-resilient)
 // ============================================================================
 
-async function safeRedis<T>(operation: () => Promise<T>, fallback: T): Promise<T> {
+export async function safeRedis<T>(operation: () => Promise<T>, fallback: T): Promise<T> {
   const isNoOp = !process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN;
 
   if (isNoOp) {
