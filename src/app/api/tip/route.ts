@@ -1,106 +1,78 @@
-// src/app/api/tip/route.ts
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
-const BLINK_API_KEY = process.env.BLINK_API_KEY;
-const BLINK_WALLET_ID = process.env.BLINK_WALLET_ID; // ← Agregado
-const BLINK_URL = 'https://api.blink.sv/graphql';
+const BLINK_API_URL = 'https://api.blink.sv/graphql';
 
-export async function POST(req: NextRequest) {
-  try {
-    const { amount, recipient, memo } = await req.json();
+export async function POST(request: NextRequest) {
+    try {
+        const body = await request.json();
+        const { amount, memo } = body;
 
-    if (!amount || amount < 1) {
-      return Response.json({ error: 'Monto inválido' }, { status: 400 });
-    }
+        // 1. Validación básica
+        if (!amount || amount < 1000) { // Mínimo 1000 sats
+            return NextResponse.json({ error: 'Minimum amount is 1000 sats' }, { status: 400 });
+        }
 
-    if (!BLINK_API_KEY || !BLINK_WALLET_ID) {
-      console.error('Faltan credenciales de Blink');
-      return Response.json(
-        { error: 'Servicio no configurado' }, 
-        { status: 500 }
-      );
-    }
-
-    const response = await fetch(BLINK_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-KEY': BLINK_API_KEY,
-      },
-      body: JSON.stringify({
-        query: `
-          mutation LnInvoiceCreateOnBehalfOfRecipient($input: LnInvoiceCreateOnBehalfOfRecipientInput!) {
-            lnInvoiceCreateOnBehalfOfRecipient(input: $input) {
-              invoice {
-                paymentRequest
-                paymentHash
-                paymentSecret
-                satoshis
-              }
-              errors {
-                message
-              }
+        // 2. Crear Invoice en Blink via GraphQL
+        // Usamos la API pública de Blink para crear invoices sin necesidad de SDK complejos
+        // Documentación: https://dev.blink.sv/
+        const mutation = `
+            mutation LnInvoiceCreate($input: LnInvoiceCreateInput!) {
+                lnInvoiceCreate(input: $input) {
+                    invoice {
+                        paymentRequest
+                        paymentHash
+                        paymentSecret
+                    }
+                    errors {
+                        message
+                    }
+                }
             }
-          }
-        `,
-        variables: {
-          input: {
-            recipientWalletId: BLINK_WALLET_ID, // ← Usa tu wallet
-            amount: amount.toString(),
-            memo: memo || `Tip to ${recipient}`,
-          },
-        },
-      }),
-    });
+        `;
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Blink HTTP error:', response.status, errorText);
-      return Response.json(
-        { error: `Error de Blink: ${response.status}` },
-        { status: 502 }
-      );
+        // Nota: Para crear invoices EN NOMBRE DE UN USUARIO (scubapav@blink.sv),
+        // necesitas un token de autenticación del usuario (API Key personal) o usar la API Admin.
+        // Si solo quieres recibir en TU cuenta, usaremos la API Key que configuramos antes.
+        
+        // Ajuste: Usaremos el endpoint de "Receive Payment" simplificado si tienes tu API Key de Blink
+        // o un wrapper si lo tienes configurado en .env como BLINK_API_KEY
+        
+        const variables = {
+            input: {
+                amount: Math.floor(amount), // Sats
+                memo: memo || "Bitcoin Agent Tip",
+                walletId: process.env.BLINK_WALLET_ID // Tu wallet ID de .env
+            }
+        };
+
+        const response = await fetch(BLINK_API_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-API-KEY': process.env.BLINK_API_KEY || '' // Tu clave de .env
+            },
+            body: JSON.stringify({
+                query: mutation,
+                variables: variables
+            })
+        });
+
+        const data = await response.json();
+        
+        if (data.errors || !data.data?.lnInvoiceCreate?.invoice) {
+            console.error('Blink Error:', data.errors);
+            throw new Error(data.errors?.[0]?.message || 'Failed to create invoice');
+        }
+
+        const paymentRequest = data.data.lnInvoiceCreate.invoice.paymentRequest;
+
+        return NextResponse.json({
+            success: true,
+            paymentRequest: paymentRequest
+        });
+
+    } catch (error: any) {
+        console.error('Tip API Error:', error);
+        return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 });
     }
-
-    const data = await response.json();
-
-    if (data.errors?.length > 0) {
-      console.error('Blink GraphQL error:', data.errors);
-      return Response.json(
-        { error: data.errors[0].message || 'Error de Blink' },
-        { status: 500 }
-      );
-    }
-
-    const invoiceData = data.data?.lnInvoiceCreateOnBehalfOfRecipient;
-    
-    if (invoiceData?.errors?.length > 0) {
-      console.error('Blink invoice error:', invoiceData.errors);
-      return Response.json(
-        { error: invoiceData.errors[0].message },
-        { status: 500 }
-      );
-    }
-
-    if (!invoiceData?.invoice?.paymentRequest) {
-      return Response.json(
-        { error: 'No se recibió paymentRequest' },
-        { status: 500 }
-      );
-    }
-
-    return Response.json({
-      paymentRequest: invoiceData.invoice.paymentRequest,
-      paymentHash: invoiceData.invoice.paymentHash,
-      amount,
-      recipient,
-    });
-
-  } catch (error) {
-    console.error('Tip API error:', error);
-    return Response.json(
-      { error: 'Error interno del servidor' },
-      { status: 500 }
-    );
-  }
 }

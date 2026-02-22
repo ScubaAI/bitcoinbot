@@ -89,6 +89,17 @@ const IMPACT_STATS = [
 ];
 const PRESET_AMOUNTS = [1000, 5000, 21000, 100000];
 
+// Componente de Logo Bitcoin simple (Solución al "Logo Feo")
+const BitcoinLogoSVG = () => (
+  <svg viewBox="0 0 64 64" width="48" height="48" className="mx-auto my-auto">
+    <circle cx="32" cy="32" r="30" fill="#F7931A" />
+    <path
+      fill="#FFF"
+      d="M44.5 28.5c.6-4-2.4-6.2-6.5-7.6l1.3-5.3-3.2-.8-1.3 5.2c-.8-.2-1.7-.4-2.5-.6l1.3-5.2-3.2-.8-1.3 5.3c-.7-.2-1.4-.3-2-.5l-4.4-1.1-.8 3.4s2.4.5 2.3.6c1.3.3 1.5 1.2 1.5 1.9l-1.5 6.1c.1 0 .2 0 .4.1-.1 0-.3-.1-.4-.1l-2.1 8.5c-.2.4-.6 1.1-1.5.8 0 .1-2.3-.6-2.3-.6l-1.6 3.7 4.1 1c.8.2 1.5.4 2.2.6l-1.4 5.5 3.2.8 1.4-5.4c.9.2 1.7.5 2.5.7l-1.3 5.3 3.2.8 1.4-5.5c5.7 1.1 10 .6 11.8-4.5 1.5-4.1-.1-6.5-3.1-8.1 2.2-.5 3.9-2 4.3-5zm-7.8 10.9c-1.1 4.3-8.2 2-10.5 1.4l1.9-7.5c2.3.6 9.7 1.6 8.6 6.1zm1.1-11.3c-1 3.9-6.8 1.9-8.7 1.4l1.7-6.7c1.9.5 8 1.4 7 5.3z"
+    />
+  </svg>
+);
+
 export function TipJar({ lang, dict }: TipJarProps) {
   const [mode, setMode] = useState<'address' | 'invoice'>('address');
   const [paymentRequest, setPaymentRequest] = useState<string | null>(null);
@@ -225,8 +236,9 @@ export function TipJar({ lang, dict }: TipJarProps) {
     return sats.toString();
   };
 
+  // Solución al problema de escaneo móvil: Asegurar formato URI correcto
   const currentQRValue = mode === 'invoice' && paymentRequest 
-    ? paymentRequest 
+    ? `lightning:${paymentRequest.toUpperCase()}` // Upper case ayuda a algunos escáneres antiguos
     : `lightning:${lightningAddress}`;
 
   return (
@@ -319,20 +331,21 @@ export function TipJar({ lang, dict }: TipJarProps) {
                   </div>
                 )}
 
-                {/* QR Code */}
-                <div className="bg-white p-4 rounded-2xl mb-6">
+                {/* QR Code MEJORADO */}
+                <div className="bg-white p-4 rounded-2xl mb-6 relative">
                   <QRCodeSVG
                     value={currentQRValue}
                     size={256}
-                    level="M"
+                    level="H" // Alta corrección de errores para mejor escaneo
                     includeMargin={false}
-                    imageSettings={{
-                      src: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZjU5ZTBiIiBzdHJva2Utd2lkdGg9IjIiPjxwYXRoIGQ9Ik0xMyAyTDMgMTJsMyAzIDktOSIvPjxwYXRoIGQ9Ik0xMiAybDEwIDEwLTMgMy05LTkiLz48cGF0aCBkPSJNMTAgMTRsLTMgMy05LTkgMy0zIDkgOSIvPjxwYXRoIGQ9Ik0xNCAxMGwzLTMtOS05LTMgMyA5IDkiLz48L3N2Zz4=",
-                      height: 48,
-                      width: 48,
-                      excavate: true,
-                    }}
+                    // ELIMINADO imageSettings problemático
                   />
+                  {/* Logo Superpuesto (Solución elegante) */}
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div className="bg-white p-1 rounded-full shadow-md">
+                      <BitcoinLogoSVG />
+                    </div>
+                  </div>
                 </div>
 
                 {/* Timer */}

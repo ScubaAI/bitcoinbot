@@ -2,17 +2,19 @@ import { NextRequest, NextResponse } from 'next/server';
 import { redis } from '@/lib/redis';
 
 /**
- * Satoshi Config API
- * Adjusts global security parameters of the Digital Immune System
+ * Sistema Inmune: Hipotálamo de Configuración
+ * 
+ * Analogía: Controla la agresividad del sistema.
+ * Paranoia Mode = Estado de Estrés Agudo (inmunidad máxima).
  */
 
 export async function POST(request: NextRequest) {
-    // 🛡️ Admin Verification
+    // 🛡️ 1. VERIFICACIÓN (Solo Glóbulos Blancos Especiales)
     const apiKey = request.headers.get('X-API-Key');
-    const adminKey = process.env.ADMIN_API_KEY || process.env.NEXT_PUBLIC_ADMIN_API_KEY;
+    const adminKey = process.env.ADMIN_API_KEY; // CORREGIDO
 
     if (!apiKey || apiKey !== adminKey) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        return NextResponse.json({ error: 'Homeostasis violation' }, { status: 401 });
     }
 
     try {
@@ -20,38 +22,36 @@ export async function POST(request: NextRequest) {
         const { paranoiaMode } = body;
 
         if (typeof paranoiaMode !== 'boolean') {
-            return NextResponse.json({ error: 'Invalid configuration payload' }, { status: 400 });
+            return NextResponse.json({ error: 'Invalid signal' }, { status: 400 });
         }
 
-        // Apply configuration change to Redis
+        // 2. APLICAR CAMBIO (Ajuste hormonal global)
         await redis.set('btc:config:paranoia', paranoiaMode ? 'true' : 'false');
 
-        // Log configuration change
+        // 3. REGISTRO CLÍNICO (Auditoría separada)
         const logEntry = {
             timestamp: Date.now(),
-            action: 'CONFIG_CHANGE',
+            event: 'SYSTEM_CONFIG_CHANGE',
             parameter: 'paranoiaMode',
             value: paranoiaMode,
-            administrator: 'Satoshi Core'
+            actor: 'Admin Dashboard'
         };
-        await redis.lpush('btc:pow:audit', JSON.stringify(logEntry));
+        // CORREGIDO: Usar una lista de auditoría de sistema dedicada
+        await redis.lpush('btc:immune:system:audit', JSON.stringify(logEntry));
 
         return NextResponse.json({
             success: true,
-            message: `Global security state updated: Paranoia Mode ${paranoiaMode ? 'ACTIVATED' : 'DEACTIVATED'}`
+            message: `Nervous system updated: Paranoia ${paranoiaMode ? 'HIGH' : 'NORMAL'}`
         });
     } catch (error) {
-        console.error('Config API error:', error);
-        return NextResponse.json({ error: 'Failed to synchronize configuration' }, { status: 500 });
+        console.error('Hypothalamus error:', error);
+        return NextResponse.json({ error: 'Neural disconnect' }, { status: 500 });
     }
 }
 
-/**
- * GET Handler for reading current config
- */
 export async function GET(request: NextRequest) {
     const apiKey = request.headers.get('X-API-Key');
-    const adminKey = process.env.ADMIN_API_KEY || process.env.NEXT_PUBLIC_ADMIN_API_KEY;
+    const adminKey = process.env.ADMIN_API_KEY; // CORREGIDO
 
     if (!apiKey || apiKey !== adminKey) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

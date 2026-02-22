@@ -9,13 +9,21 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+// ANTES (Directo al motor, sin control)
+// import {
+//     loadCoinbin,
+//     generateBeaconWallet,
+//     createBeaconTransaction,
+//     fetchUtxos,
+//     broadcastTransaction,
+//     formatBeaconMessage
+// } from '@/lib/coinbin/beacon';
+// AHORA: Usamos la API route /api/beacon/create para crear transacciones
 import {
     loadCoinbin,
     generateBeaconWallet,
-    createBeaconTransaction,
     fetchUtxos,
-    broadcastTransaction,
-    formatBeaconMessage
+    broadcastTransaction
 } from '@/lib/coinbin/beacon';
 import { TerminalWindow } from '@/components/terminal/TerminalWindow';
 import { QRCodeSVG } from 'qrcode.react';
@@ -31,8 +39,14 @@ export default function NativeBeaconPage() {
     const [txid, setTxid] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
 
-    // Cargar Coinbin
+    // Cargar Coinbin y restaurar wallet desde sessionStorage
     useEffect(() => {
+        const savedWif = sessionStorage.getItem('temp_beacon_wif');
+        const savedAddr = sessionStorage.getItem('temp_beacon_addr');
+        if (savedWif && savedAddr) {
+            setWallet({ wif: savedWif, address: savedAddr });
+            checkBalance(savedAddr);
+        }
         loadCoinbin().then(() => setLoaded(true));
     }, []);
 
@@ -41,6 +55,12 @@ export default function NativeBeaconPage() {
         try {
             const w = await generateBeaconWallet();
             setWallet(w);
+            
+            // ADVERTENCIA: Guardar en sessionStorage para resistir F5
+            // Nota: Esto es seguro para beacons pequeños, pero riesgoso para grandes fondos.
+            sessionStorage.setItem('temp_beacon_wif', w.wif);
+            sessionStorage.setItem('temp_beacon_addr', w.address);
+            
             checkBalance(w.address);
         } catch (e) {
             setError((e as Error).message);
@@ -63,29 +83,42 @@ export default function NativeBeaconPage() {
         }
     };
 
-    // Crear transacción
+    // Crear transacción - AHORA vía API en lugar de directo al motor
     const createTx = async () => {
         if (!wallet) return;
         setError(null);
         setTxid(null);
+        setBroadcasting(true);
 
         try {
-            const utxos = await fetchUtxos(wallet.address);
-            if (utxos.length === 0) {
-                throw new Error('No UTXOs found. Please fund the address first.');
+            // Llamamos a NUESTRA api, no al motor directo
+            const response = await fetch('/api/beacon/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    message: message,
+                    // El servidor usa su propia wallet (BEACON_WIF_KEY en .env)
+                    // Si quisieras que el usuario pague, necesitarías PSBT
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                setTx({ 
+                    rawTx: data.rawTx, 
+                    details: { 
+                        opReturn: message,
+                        txid: data.txid 
+                    } 
+                });
+            } else {
+                setError(data.error || 'Unknown error');
             }
-
-            const beaconMessage = formatBeaconMessage(blockHeight, message);
-            const transaction = await createBeaconTransaction(
-                wallet.wif,
-                utxos,
-                beaconMessage,
-                10 // fee rate
-            );
-
-            setTx(transaction);
         } catch (e) {
-            setError((e as Error).message);
+            setError("Connection failed: " + (e as Error).message);
+        } finally {
+            setBroadcasting(false);
         }
     };
 
@@ -140,6 +173,11 @@ export default function NativeBeaconPage() {
                             </div>
                         ) : (
                             <div className="space-y-6">
+                                {/* ADVERTENCIA: Session storage warning */}
+                                <div className="bg-yellow-900/20 border border-yellow-600/50 p-3 rounded text-xs text-yellow-400">
+                                    ⚠️ Wallet stored in session (survives F5, clears on tab close). 
+                                    <strong> Back up your WIF key if storing significant funds!</strong>
+                                </div>
                                 <div className="bg-[#0f0f0f] p-4 rounded border border-[#2a2a2a]">
                                     <div className="text-xs text-gray-500 uppercase">Address</div>
                                     <div className="text-[#00ff41] break-all text-sm font-bold">{wallet.address}</div>

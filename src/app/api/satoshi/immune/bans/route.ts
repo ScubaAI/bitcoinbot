@@ -2,48 +2,64 @@ import { NextRequest, NextResponse } from 'next/server';
 import { redis } from '@/lib/redis';
 
 /**
- * Satoshi Active Bans API
- * Returns list of currently restricted nodes
+ * Sistema Inmune: Listado de Nódulos Linfáticos Activos (Bans)
+ * 
+ * Analogía: Este endpoint es el "Monitor de Cuarentena".
+ * Muestra qué patógenos (IPs) están aislados del cuerpo.
  */
 
 export async function GET(request: NextRequest) {
-    // 🛡️ Admin Verification
+    // 🛡️ 1. VERIFICACIÓN DE IDENTIDAD (Glóbulos Blancos de Seguridad)
     const apiKey = request.headers.get('X-API-Key');
-    const adminKey = process.env.ADMIN_API_KEY || process.env.NEXT_PUBLIC_ADMIN_API_KEY;
+    const adminKey = process.env.ADMIN_API_KEY; // CORREGIDO: Eliminada la variable pública
 
     if (!apiKey || apiKey !== adminKey) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        return NextResponse.json({ error: 'Inmunodeficiency: Unauthorized' }, { status: 401 });
     }
 
     try {
-        // Fetch ban history and verify residency
+        // 2. OBTENER HISTORIAL DE INFECCIONES
         const banHistory = await redis.lrange('btc:immune:byzantine:nodes', 0, 99) || [];
+        if (!banHistory.length) return NextResponse.json([]);
 
-        const activeBans = await Promise.all(banHistory.map(async (b: any) => {
+        // 3. PREPARAR DATOS (Diagnóstico preventivo)
+        const parsedHistory = banHistory.map((b: any) => {
             try {
-                const data = typeof b === 'string' ? JSON.parse(b) : b;
-
-                // Check if the ban is still active in the main bitmask
-                const exists = await redis.exists(`btc:banlist:${data.ip}`);
-                if (!exists) return null;
-
-                return {
-                    ip: data.ip,
-                    reason: data.reason || 'Byzantine action',
-                    timestamp: data.timestamp || Date.now(),
-                    expires: data.expires || (Date.now() + 3600000),
-                    nodeType: data.nodeType || 'byzantine',
-                    previousBans: data.previousBans || 0
-                };
-            } catch (e) {
+                return typeof b === 'string' ? JSON.parse(b) : b;
+            } catch {
                 return null;
             }
+        }).filter(Boolean); // Limpiar datos corruptos
+
+        // 4. VERIFICACIÓN EN MASA (Respuesta Inmune Eficiente)
+        // En lugar de ir cama por cama, usamos el intercomunicador (Pipeline)
+        const pipeline = redis.pipeline();
+        parsedHistory.forEach(node => {
+            pipeline.exists(`btc:banlist:${node.ip}`);
+        });
+        
+        const existenceResults = await pipeline.exec();
+
+        // 5. FILTRAR SOLO ACTIVOS (Pacientes aún en cuarentena)
+        const activeBans = parsedHistory.filter((node, index) => {
+            // existenceResults[index] devuelve 1 si existe, 0 si no
+            return existenceResults[index] === 1;
+        });
+
+        // 6. FORMATEAR REPORTE MÉDICO
+        const report = activeBans.map(data => ({
+            ip: data.ip,
+            reason: data.reason || 'Byzantine behavior',
+            timestamp: data.timestamp || Date.now(),
+            expires: data.expires || (Date.now() + 3600000),
+            nodeType: data.nodeType || 'byzantine',
+            previousBans: data.previousBans || 0
         }));
 
-        // Filter out expired or invalid bans
-        return NextResponse.json(activeBans.filter(Boolean));
+        return NextResponse.json(report);
+
     } catch (error) {
-        console.error('Bans API error:', error);
-        return NextResponse.json({ error: 'Failed to access banlist' }, { status: 500 });
+        console.error('Immune System Failure:', error);
+        return NextResponse.json({ error: 'Autoimmune error: System overload' }, { status: 500 });
     }
 }
