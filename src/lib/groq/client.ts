@@ -49,10 +49,11 @@ export const BITCOIN_SYSTEM_PROMPT = `You are Bitcoin Agent...`;
 // HELPERS DE SEGURIDAD
 // ============================================================================
 
-function assertGroqEnabled(): asserts groq is Groq {
+function getGroqClient(): Groq {
   if (!groq) {
     throw new Error('Groq client not configured');
   }
+  return groq;
 }
 
 function validateMessages(messages: ChatMessage[]): void {
@@ -100,55 +101,54 @@ async function withRetry<T>(operation: () => Promise<T>, retries = MAX_RETRIES):
 
 export async function* streamChat(options: ChatOptions) {
   try {
-    assertGroqEnabled();
+    const client = getGroqClient();
     validateMessages(options.messages);
+    
+    const { messages, temperature = 0.7, max_tokens = 2048 } = options;
+    const totalChars = messages.reduce((acc, m) => acc + m.content.length, 0);
+
+    if (totalChars > MAX_INPUT_CHARS) {
+      yield "[Error: Contexto demasiado largo. Inicia nueva conversación.]";
+      return;
+    }
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), GROQ_TIMEOUT_MS);
+
+    try {
+      const stream = await withRetry(() => 
+        client.chat.completions.create({
+          model: DEFAULT_MODEL,
+          messages,
+          temperature,
+          max_tokens,
+          stream: true,
+        })
+      );
+
+      for await (const chunk of stream) {
+        clearTimeout(timeoutId); // Reset timeout en cada chunk
+        const content = chunk.choices[0]?.delta?.content || '';
+        if (content) yield content;
+      }
+    } catch (error: any) {
+      safeErrorLog('Streaming error', error);
+      
+      if (error?.name === 'AbortError') {
+        yield "\n[⚠️ El agente tardó demasiado. Intenta una pregunta más corta.]";
+      } else if (error?.status === 429) {
+        yield "\n[⚠️ Demasiadas solicitudes. Espera un momento.]";
+      } else if (error?.status === 401) {
+        yield "\n[⚠️ Error de autenticación. Contacta al admin.]";
+      } else {
+        yield "\n[⚠️ Error procesando tu solicitud.]";
+      }
+    } finally {
+      clearTimeout(timeoutId);
+    }
   } catch (err: any) {
     yield `[Error: ${err.message}]`;
     return;
-  }
-
-  const { messages, temperature = 0.7, max_tokens = 2048 } = options;
-  const totalChars = messages.reduce((acc, m) => acc + m.content.length, 0);
-
-  if (totalChars > MAX_INPUT_CHARS) {
-    yield "[Error: Contexto demasiado largo. Inicia nueva conversación.]";
-    return;
-  }
-
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), GROQ_TIMEOUT_MS);
-
-  try {
-    const stream = await withRetry(() => 
-      groq.chat.completions.create({
-        model: DEFAULT_MODEL,
-        messages,
-        temperature,
-        max_tokens,
-        stream: true,
-        signal: controller.signal as any, // Groq SDK puede requerir cast
-      })
-    );
-
-    for await (const chunk of stream) {
-      clearTimeout(timeoutId); // Reset timeout en cada chunk
-      const content = chunk.choices[0]?.delta?.content || '';
-      if (content) yield content;
-    }
-  } catch (error: any) {
-    safeErrorLog('Streaming error', error);
-    
-    if (error?.name === 'AbortError') {
-      yield "\n[⚠️ El agente tardó demasiado. Intenta una pregunta más corta.]";
-    } else if (error?.status === 429) {
-      yield "\n[⚠️ Demasiadas solicitudes. Espera un momento.]";
-    } else if (error?.status === 401) {
-      yield "\n[⚠️ Error de autenticación. Contacta al admin.]";
-    } else {
-      yield "\n[⚠️ Error procesando tu solicitud.]";
-    }
-  } finally {
-    clearTimeout(timeoutId);
   }
 }
 
@@ -157,7 +157,7 @@ export async function* streamChat(options: ChatOptions) {
 // ============================================================================
 
 export async function chat(options: ChatOptions): Promise<string> {
-  assertGroqEnabled();
+  const client = getGroqClient();
   validateMessages(options.messages);
 
   const { messages, temperature = 0.7, max_tokens = 2048 } = options;
@@ -172,12 +172,11 @@ export async function chat(options: ChatOptions): Promise<string> {
 
   try {
     const completion = await withRetry(() =>
-      groq.chat.completions.create({
+      client.chat.completions.create({
         model: DEFAULT_MODEL,
         messages,
         temperature,
         max_tokens,
-        signal: controller.signal as any,
       })
     );
 
