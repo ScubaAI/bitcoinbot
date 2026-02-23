@@ -18,7 +18,9 @@ import {
     type UTXO
 } from '@/lib/coinbin/beacon';
 import { TerminalWindow } from '@/components/terminal/TerminalWindow';
-import { QRCodeSVG } from 'qrcode.react';
+import dynamic from 'next/dynamic';
+
+const QRCodeSVG = dynamic(() => import('qrcode.react').then(mod => mod.QRCodeSVG), { ssr: false });
 
 export default function NativeBeaconPage() {
     const [loaded, setLoaded] = useState(false);

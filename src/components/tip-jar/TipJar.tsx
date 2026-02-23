@@ -3,7 +3,9 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Zap, Copy, Check, Heart, Globe, ArrowRight, Sparkles, AlertCircle, X, Clock } from 'lucide-react';
-import { QRCodeSVG } from 'qrcode.react';
+import dynamic from 'next/dynamic';
+
+const QRCodeSVG = dynamic(() => import('qrcode.react').then(mod => mod.QRCodeSVG), { ssr: false });
 import { Locale } from '@/types';
 
 interface TipDict {
@@ -217,7 +219,7 @@ export function TipJar({ lang, dict }: TipJarProps) {
   };
 
   const handleAmountSelect = (amount: number) => generateInvoice(amount);
-  
+
   const handleCustomSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const amt = parseInt(customAmount);
@@ -237,7 +239,7 @@ export function TipJar({ lang, dict }: TipJarProps) {
   };
 
   // Solución al problema de escaneo móvil: Asegurar formato URI correcto
-  const currentQRValue = mode === 'invoice' && paymentRequest 
+  const currentQRValue = mode === 'invoice' && paymentRequest
     ? `lightning:${paymentRequest.toUpperCase()}` // Upper case ayuda a algunos escáneres antiguos
     : `lightning:${lightningAddress}`;
 
@@ -252,7 +254,7 @@ export function TipJar({ lang, dict }: TipJarProps) {
 
       <div className="relative z-10 max-w-6xl mx-auto px-6">
         {/* Header */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           className="text-center mb-16"
@@ -261,7 +263,7 @@ export function TipJar({ lang, dict }: TipJarProps) {
             <Zap className="w-4 h-4 text-orange-400" />
             <span className="text-orange-400 text-sm font-mono uppercase tracking-wider">Lightning Network</span>
           </div>
-          
+
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
             {t.title}
           </h2>
@@ -297,7 +299,7 @@ export function TipJar({ lang, dict }: TipJarProps) {
 
         <div className="grid md:grid-cols-2 gap-12 items-start">
           {/* === QR PERMANENTE === */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, x: -20 }}
             whileInView={{ opacity: 1, x: 0 }}
             className="flex justify-center pt-8 md:pt-0"
@@ -305,7 +307,7 @@ export function TipJar({ lang, dict }: TipJarProps) {
             <div className="relative group">
               {/* Glow effect */}
               <div className="absolute -inset-4 bg-gradient-to-r from-orange-500/20 to-amber-500/20 rounded-3xl blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-              
+
               <div className="relative bg-slate-900/80 backdrop-blur-xl border border-slate-700/50 rounded-3xl p-8 shadow-2xl">
                 {/* Amount Badge */}
                 {mode === 'invoice' && selectedAmount ? (
@@ -338,7 +340,7 @@ export function TipJar({ lang, dict }: TipJarProps) {
                     size={256}
                     level="H" // Alta corrección de errores para mejor escaneo
                     includeMargin={false}
-                    // ELIMINADO imageSettings problemático
+                  // ELIMINADO imageSettings problemático
                   />
                   {/* Logo Superpuesto (Solución elegante) */}
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -378,7 +380,7 @@ export function TipJar({ lang, dict }: TipJarProps) {
           </motion.div>
 
           {/* === Controles === */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, x: 20 }}
             whileInView={{ opacity: 1, x: 0 }}
             className="max-w-md mx-auto md:mx-0 space-y-6"
@@ -393,7 +395,7 @@ export function TipJar({ lang, dict }: TipJarProps) {
                   className={`
                     relative overflow-hidden group p-4 rounded-2xl border-2 transition-all duration-300
                     ${selectedAmount === amount && mode === 'invoice'
-                      ? 'bg-orange-500/20 border-orange-500 text-orange-400' 
+                      ? 'bg-orange-500/20 border-orange-500 text-orange-400'
                       : 'bg-slate-900/50 border-slate-700 hover:border-orange-500/50 hover:bg-slate-800/50 text-slate-300'
                     }
                     ${mode === 'invoice' ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'}
@@ -454,7 +456,7 @@ export function TipJar({ lang, dict }: TipJarProps) {
               </p>
               <div className="flex items-center justify-center gap-3 bg-slate-900 border border-slate-700 rounded-2xl px-6 py-4">
                 <code className="text-orange-400 font-mono text-sm md:text-base">{lightningAddress}</code>
-                <button 
+                <button
                   onClick={copyAddress}
                   className="p-2 hover:bg-slate-800 rounded-xl transition-colors group"
                 >
@@ -508,8 +510,8 @@ export function TipJar({ lang, dict }: TipJarProps) {
             >
               <AlertCircle className="w-5 h-5 flex-shrink-0" />
               <span className="text-sm">{error}</span>
-              <button 
-                onClick={() => setError(null)} 
+              <button
+                onClick={() => setError(null)}
                 className="ml-2 p-1 hover:bg-white/20 rounded-lg transition-colors"
               >
                 <X className="w-4 h-4" />
@@ -524,21 +526,21 @@ export function TipJar({ lang, dict }: TipJarProps) {
             {[...Array(20)].map((_, i) => (
               <motion.div
                 key={i}
-                initial={{ 
-                  opacity: 1, 
-                  y: -20, 
+                initial={{
+                  opacity: 1,
+                  y: -20,
                   x: Math.random() * window.innerWidth,
-                  rotate: 0 
+                  rotate: 0
                 }}
-                animate={{ 
-                  opacity: 0, 
+                animate={{
+                  opacity: 0,
                   y: window.innerHeight + 100,
                   rotate: 360 * (Math.random() > 0.5 ? 1 : -1),
                   x: `+=${(Math.random() - 0.5) * 200}`
                 }}
-                transition={{ 
+                transition={{
                   duration: 2 + Math.random() * 2,
-                  ease: "easeOut" 
+                  ease: "easeOut"
                 }}
                 className="absolute w-3 h-3 rounded-full"
                 style={{
