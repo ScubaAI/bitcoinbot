@@ -3,12 +3,13 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { TerminalWindow } from '@/components/terminal/TerminalWindow';
+import { loadCoinbin } from '@/lib/coinbin/beacon';
 
 export default function NativeBeaconPage() {
     const [loaded, setLoaded] = useState(false);
 
     useEffect(() => {
-        setLoaded(true);
+        loadCoinbin().then(() => setLoaded(true));
     }, []);
 
     if (!loaded) return <div style={{ color: 'white' }}>Loading...</div>;
@@ -21,7 +22,7 @@ export default function NativeBeaconPage() {
         >
             <h1>Native Coinbin Beacon</h1>
             <TerminalWindow title="test">
-                <p>Si ves esto dentro de la ventana, TerminalWindow funciona.</p>
+                <p>loadCoinbin funciona: {loaded ? 'SÍ' : 'NO'}</p>
             </TerminalWindow>
         </motion.div>
     );
