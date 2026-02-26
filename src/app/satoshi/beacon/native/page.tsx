@@ -3,13 +3,19 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { TerminalWindow } from '@/components/terminal/TerminalWindow';
-import { loadCoinbin } from '@/lib/coinbin/beacon';
 
 export default function NativeBeaconPage() {
     const [loaded, setLoaded] = useState(false);
+    const [coinbin, setCoinbin] = useState<any>(null);
 
     useEffect(() => {
-        loadCoinbin().then(() => setLoaded(true));
+        // Dynamic import solo en cliente - evita SSR issues con bitcoinjs-lib
+        import('@/lib/coinbin/beacon').then((mod) => {
+            mod.loadCoinbin().then(() => {
+                setCoinbin(mod);
+                setLoaded(true);
+            });
+        });
     }, []);
 
     if (!loaded) return <div style={{ color: 'white' }}>Loading...</div>;
@@ -22,7 +28,7 @@ export default function NativeBeaconPage() {
         >
             <h1>Native Coinbin Beacon</h1>
             <TerminalWindow title="test">
-                <p>loadCoinbin funciona: {loaded ? 'SÍ' : 'NO'}</p>
+                <p>Coinbin cargado dinámicamente: {coinbin ? 'SÍ' : 'NO'}</p>
             </TerminalWindow>
         </motion.div>
     );
