@@ -770,4 +770,73 @@ export function TipJar({ lang, dict }: TipJarProps) {
                 transition={{ duration: 2, repeat: Infinity }}
               >
                 <motion.div 
-                  className="bg-white/20 p-3
+                  className="bg-white/20 p-3 rounded-full"
+                  animate={{ scale: [1, 1.1, 1], rotate: [0, 5, -5, 0] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                >
+                  <Heart className="w-8 h-8 fill-current" />
+                </motion.div>
+                <div>
+                  <div className="text-2xl font-bold">{t.success}</div>
+                  <div className="text-orange-100">{t.thankYou}</div>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Error Toast */}
+        <AnimatePresence>
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-red-600 text-white px-6 py-4 rounded-2xl flex items-center gap-3 shadow-2xl z-50"
+            >
+              <AlertCircle className="w-5 h-5 flex-shrink-0" />
+              <span className="text-sm">{error}</span>
+              <button
+                onClick={() => setError(null)}
+                className="ml-2 p-1 hover:bg-white/20 rounded-lg transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Confetti */}
+        {showConfetti && (
+          <div className="fixed inset-0 pointer-events-none z-40 overflow-hidden">
+            {[...Array(20)].map((_, i) => (
+              <motion.div
+                key={i}
+                initial={{
+                  opacity: 1,
+                  y: -20,
+                  x: Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 1000),
+                  rotate: 0
+                }}
+                animate={{
+                  opacity: 0,
+                  y: (typeof window !== 'undefined' ? window.innerHeight : 1000) + 100,
+                  rotate: 360 * (Math.random() > 0.5 ? 1 : -1),
+                  x: `+=${(Math.random() - 0.5) * 200}`
+                }}
+                transition={{
+                  duration: 2 + Math.random() * 2,
+                  ease: "easeOut"
+                }}
+                className="absolute w-3 h-3 rounded-full"
+                style={{
+                  backgroundColor: ['#f97316', '#fbbf24', '#f59e0b'][Math.floor(Math.random() * 3)]
+                }}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
