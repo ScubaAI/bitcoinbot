@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import type { AuditEventType, AuditEventCategory } from '@/types/compliance';
+import type { Prisma } from '@prisma/client';
 
 // ============================================
 // AUDIT LOGGER
@@ -10,9 +11,9 @@ interface LogEventParams {
   eventCategory: AuditEventCategory;
   description: string;
   transactionId?: string;
-  previousValue?: Record<string, unknown>;
-  newValue?: Record<string, unknown>;
-  metadata?: Record<string, unknown>;
+  previousValue?: Prisma.InputJsonValue;
+  newValue?: Prisma.InputJsonValue;
+  metadata?: Prisma.InputJsonValue;
   actorType?: 'system' | 'admin' | 'webhook';
   actorId?: string;
   actorIP?: string;
@@ -54,7 +55,7 @@ export async function logTransactionEvent(
   transactionId: string,
   eventType: 'created' | 'status_change' | 'manual_entry',
   description: string,
-  metadata?: Record<string, unknown>
+  metadata?: Prisma.InputJsonValue
 ) {
   return logAuditEvent({
     transactionId,

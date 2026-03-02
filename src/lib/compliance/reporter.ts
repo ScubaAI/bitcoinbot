@@ -21,12 +21,10 @@ export async function generateFiscalReport(options: GenerateReportOptions) {
   const { type, period, generatedBy, notes } = options;
   
   // Check if report already exists
-  const existing = await prisma.fiscalReport.findUnique({
+  const existing = await prisma.fiscalReport.findFirst({
     where: {
-      reportType_type_period: {
-        reportType: type,
-        reportPeriod: period,
-      },
+      reportType: type,
+      reportPeriod: period,
     },
   });
   
